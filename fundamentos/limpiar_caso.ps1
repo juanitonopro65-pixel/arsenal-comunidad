@@ -1,13 +1,13 @@
-# ============================================================================
-#  LIMPIEZA DIRIGIDA — solo lo que encontramos en ESTE caso
+﻿# ============================================================================
+#  LIMPIEZA DIRIGIDA - solo lo que encontramos en ESTE caso
 #
 #  No usa reglas genericas: no va a tocar Spotify, Discord, Roblox ni Defender.
 #  Antes de limpiar averigua si el ejecutable llego a correr, que es lo que
 #  decide si con esto alcanza o hay que reinstalar.
 #
-#  PASO 1 — simulacro, no toca nada:
+#  PASO 1 - simulacro, no toca nada:
 #      powershell -ExecutionPolicy Bypass -File limpiar_caso.ps1
-#  PASO 2 — despues de leer el plan:
+#  PASO 2 - despues de leer el plan:
 #      powershell -ExecutionPolicy Bypass -File limpiar_caso.ps1 -Aplicar
 #
 #  Nada se borra: todo va a una carpeta de cuarentena en el Escritorio.
@@ -62,11 +62,11 @@ if ($Aplicar) { Write-Host "  modo: APLICAR - va a modificar el equipo`n" -Foreg
 else          { Write-Host "  modo: SIMULACRO - no toca nada`n"          -ForegroundColor Green }
 
 # ===========================================================================
-#  A. ¿LLEGO A EJECUTARSE?
+#  A. LLEGO A EJECUTARSE?
 #     El prefetch vino vacio, asi que se miran otros cuatro registros donde
 #     Windows deja rastro de lo que se ejecuto. Basta que uno lo confirme.
 # ===========================================================================
-T "A. ¿SE EJECUTO EL ARCHIVO?"
+T "A. SE EJECUTO EL ARCHIVO?"
 $pistas = @()
 
 # --- BAM / DAM: cada binario ejecutado, con su fecha

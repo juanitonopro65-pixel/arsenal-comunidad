@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 #  REVISAR SI ESTE PC EJECUTO EL INSTALADOR FALSO
 #  Solo LEE. No borra, no cambia, no toca nada.
 #
@@ -9,7 +9,7 @@
 $ErrorActionPreference = 'SilentlyContinue'
 
 # Guarda TODO lo que se imprima en un fichero. Sin esto, la ventana se cierra
-# al terminar y el resultado se pierde — que es justo lo que paso la primera vez.
+# al terminar y el resultado se pierde - que es justo lo que paso la primera vez.
 $Informe = Join-Path $env:USERPROFILE "Desktop\resultado_revision.txt"
 try { Start-Transcript -Path $Informe -Force | Out-Null } catch {}
 

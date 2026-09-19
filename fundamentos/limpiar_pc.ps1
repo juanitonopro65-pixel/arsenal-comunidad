@@ -1,9 +1,9 @@
-# ============================================================================
+﻿# ============================================================================
 #  LIMPIAR LO QUE ENCONTRO revisar_pc.ps1
 #
 #  QUE HACE Y QUE NO:
 #    Quita lo que SE ENCONTRO: procesos, arranque automatico, tareas y ficheros.
-#    NO puede garantizar que el equipo quede limpio — solo quita lo que buscamos.
+#    NO puede garantizar que el equipo quede limpio - solo quita lo que buscamos.
 #    Si el programa dejo algo que no miramos (secuestro de COM, suscripciones
 #    WMI, carga dentro de un proceso legitimo, extensiones del navegador), este
 #    script dira "hecho" y no sera verdad.
@@ -11,8 +11,8 @@
 #    Por eso, si el equipo guarda algo que importe: copia tus archivos y
 #    REINSTALA. Esto es para cuando eso no se puede hacer ahora mismo.
 #
-#  COMO SE USA — dos pasos, en este orden:
-#    1) SIMULACRO (no toca nada, solo enseña lo que haria):
+#  COMO SE USA - dos pasos, en este orden:
+#    1) SIMULACRO (no toca nada, solo ensena lo que haria):
 #         powershell -ExecutionPolicy Bypass -File limpiar_pc.ps1
 #    2) APLICAR de verdad, despues de leer la lista:
 #         powershell -ExecutionPolicy Bypass -File limpiar_pc.ps1 -Aplicar

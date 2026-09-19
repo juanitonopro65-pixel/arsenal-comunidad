@@ -1,5 +1,5 @@
-# ============================================================================
-#  SEGUNDA FASE — mirar de cerca los tres hallazgos reales
+﻿# ============================================================================
+#  SEGUNDA FASE - mirar de cerca los tres hallazgos reales
 #
 #  Solo LEE. No borra, no detiene procesos, no cambia nada.
 #  Guarda todo en el Escritorio como resultado_fase2.txt
