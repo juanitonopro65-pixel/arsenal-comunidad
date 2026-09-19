@@ -7,6 +7,12 @@
 #    2. Pegar:  powershell -ExecutionPolicy Bypass -File revisar_pc.ps1
 # ============================================================================
 $ErrorActionPreference = 'SilentlyContinue'
+
+# Guarda TODO lo que se imprima en un fichero. Sin esto, la ventana se cierra
+# al terminar y el resultado se pierde — que es justo lo que paso la primera vez.
+$Informe = Join-Path $env:USERPROFILE "Desktop\resultado_revision.txt"
+try { Start-Transcript -Path $Informe -Force | Out-Null } catch {}
+
 $hallazgos = @()
 function Aviso($t) { $script:hallazgos += $t; Write-Host "  [!] $t" -ForegroundColor Red }
 function Ok($t)    { Write-Host "  [ok] $t" -ForegroundColor DarkGray }
@@ -100,4 +106,10 @@ if ($hallazgos.Count -eq 0) {
     Write-Host " 3. Copia tus archivos personales y REINSTALA Windows." -ForegroundColor Red
     Write-Host "    Limpiar a mano un ladron de datos no es fiable." -ForegroundColor Red
 }
-Write-Host "============================================================`n" -ForegroundColor Yellow
+Write-Host "============================================================" -ForegroundColor Yellow
+
+try { Stop-Transcript | Out-Null } catch {}
+Write-Host "`n  Informe guardado en el Escritorio:" -ForegroundColor Cyan
+Write-Host "    resultado_revision.txt" -ForegroundColor White
+Write-Host "  Pasale ese fichero a quien te esta ayudando.`n" -ForegroundColor Cyan
+Read-Host "  Pulsa ENTER para cerrar"
