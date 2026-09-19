@@ -12,17 +12,23 @@ function Aviso($t) { $script:hallazgos += $t; Write-Host "  [!] $t" -ForegroundC
 function Ok($t)    { Write-Host "  [ok] $t" -ForegroundColor DarkGray }
 
 Write-Host "`n=== 1. EL ARCHIVO, POR SU HUELLA ===" -ForegroundColor Cyan
-# Esta es la huella exacta de la muestra analizada.
+Write-Host "  buscando..." -ForegroundColor DarkGray
+# Huella y tamano exactos de la muestra analizada.
 $HUELLA = '7D369EF21A49E0BCFD7875D2E000A5C6BB592E00F305E139A188F40B3DC32249'
+$TAMANO = 10253312
 $sitios = @("$env:USERPROFILE\Downloads","$env:USERPROFILE\Desktop","$env:TEMP",
             "$env:APPDATA","$env:LOCALAPPDATA")
 $encontrado = $false
 foreach ($s in $sitios) {
-    Get-ChildItem $s -Recurse -Include *.exe -Depth 3 | ForEach-Object {
-        if ((Get-FileHash $_.FullName -Algorithm SHA256).Hash -eq $HUELLA) {
-            Aviso "Muestra encontrada: $($_.FullName)"; $encontrado = $true
+    # Primero se filtra por TAMANO, que es instantaneo, y solo se calcula el
+    # hash de los que coinciden. Hashear cada .exe del equipo tarda minutos
+    # y no aporta nada: si el tamano no coincide, la huella tampoco puede.
+    Get-ChildItem $s -Recurse -Include *.exe -Depth 3 |
+        Where-Object { $_.Length -eq $TAMANO } | ForEach-Object {
+            if ((Get-FileHash $_.FullName -Algorithm SHA256).Hash -eq $HUELLA) {
+                Aviso "Muestra encontrada: $($_.FullName)"; $encontrado = $true
+            }
         }
-    }
 }
 if (-not $encontrado) { Ok "el archivo exacto no esta en las carpetas habituales" }
 
