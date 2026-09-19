@@ -27,6 +27,7 @@ hace que los trucos tengan sentido.
 | Guía | De qué trata |
 |---|---|
 | [Una versión vieja no es una vulnerabilidad](fundamentos/Version_Vieja_No_Es_Vulnerabilidad.md) | Qué te dice un banner, cómo leer un CVE en 60 segundos, **cómo saber si un exploit es falso**, y cómo responder a una petición dudosa |
+| [El instalador falso del "trabajo de scripter"](fundamentos/Instalador_Falso_Roblox.md) | Caso real analizado sin ejecutarlo: cómo reconocer un dropper empaquetado, cómo comprobar tu equipo y qué hacer si cayó. Incluye [`revisar_pc.ps1`](fundamentos/revisar_pc.ps1) |
 | [Kali Live con persistencia](fundamentos/Kali_Live_Persistencia.md) | Montar un entorno de trabajo desde cero |
 
 ---
