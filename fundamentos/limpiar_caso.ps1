@@ -2,10 +2,10 @@
 #  LIMPIEZA DIRIGIDA — solo lo que encontramos en ESTE caso
 #
 #  No usa reglas genericas: no va a tocar Spotify, Discord, Roblox ni Defender.
-#  Quita exactamente cuatro cosas, y antes averigua si el ejecutable llego a
-#  correr, que es lo que decide si con esto alcanza.
+#  Antes de limpiar averigua si el ejecutable llego a correr, que es lo que
+#  decide si con esto alcanza o hay que reinstalar.
 #
-#  PASO 1 — simulacro, no toca nada, solo informa:
+#  PASO 1 — simulacro, no toca nada:
 #      powershell -ExecutionPolicy Bypass -File limpiar_caso.ps1
 #  PASO 2 — despues de leer el plan:
 #      powershell -ExecutionPolicy Bypass -File limpiar_caso.ps1 -Aplicar
@@ -15,92 +15,126 @@
 param([switch]$Aplicar)
 $ErrorActionPreference = 'SilentlyContinue'
 
-$Informe = Join-Path $env:USERPROFILE "Desktop\resultado_limpieza.txt"
-try { Start-Transcript -Path $Informe -Force | Out-Null } catch {}
+$Informe    = Join-Path $env:USERPROFILE "Desktop\resultado_limpieza.txt"
 $Cuarentena = Join-Path $env:USERPROFILE "Desktop\Cuarentena_$(Get-Date -Format 'yyyyMMdd_HHmm')"
-$HUELLA = '396269DEA266D8B7A3D5AEC6C7D7B586F39CEF0CF45EFE1678368801CD933D0D'
+$HUELLA     = '396269DEA266D8B7A3D5AEC6C7D7B586F39CEF0CF45EFE1678368801CD933D0D'
 
-function T($t){ Write-Host "`n=== $t" -ForegroundColor Cyan }
-function Hacer($q){ if($Aplicar){ Write-Host "  [HECHO] $q" -ForegroundColor Green }
-                    else        { Write-Host "  [haria] $q" -ForegroundColor Yellow } }
+# Dos patrones distintos a proposito:
+#
+#  EJECUCION - va anclado al principio del nombre de fichero, porque un patron
+#  suelto atrapa cosas legitimas. En la prueba, 'Installer-1\.1\.0' coincidio
+#  con "fabric-installer-1.1.0.exe" (instalador legitimo de Minecraft) y dio un
+#  falso "SI se ejecuto" \u2014 que es el veredicto que manda a reinstalar Windows.
+#  Un falso positivo aqui cuesta un formateo para nada.
+$EJECUCION = '(^|[\\/])(Installer-1\.1\.0\.exe|[\u0425\u0445][\u0445]-v\.9\.554\.exe|Madium)'
+#
+#  FICHEROS - puede ser mas ancho: mover algo a cuarentena es reversible,
+#  y ademas se comprueba la huella exacta en los .exe.
+$PATRON    = 'Madium|Installer-1\.1\.0\.exe|v\.9\.554|v8\.91\.830|[\u0425\u0445][\u0445]'
 
-Write-Host @"
+try { Start-Transcript -Path $Informe -Force | Out-Null } catch { }
 
-  LIMPIEZA DEL CASO
-  modo: $(if($Aplicar){'APLICAR — va a modificar el equipo'}else{'SIMULACRO — no toca nada'})
-"@ -ForegroundColor Yellow
+function T   ($t) { Write-Host "`n=== $t" -ForegroundColor Cyan }
+function Hacer ($q) {
+    if ($Aplicar) { Write-Host "  [HECHO] $q" -ForegroundColor Green }
+    else          { Write-Host "  [haria] $q" -ForegroundColor Yellow }
+}
+function Rot13 ($s) {
+    $r = ''
+    foreach ($ch in $s.ToCharArray()) {
+        $c = [int][char]$ch
+        if     ($c -ge 97 -and $c -le 122) { $r += [char](97 + ((($c - 97) + 13) % 26)) }
+        elseif ($c -ge 65 -and $c -le 90)  { $r += [char](65 + ((($c - 65) + 13) % 26)) }
+        else                               { $r += $ch }
+    }
+    return $r
+}
+function NombresDe ($clave) {
+    if (Test-Path $clave) {
+        $k = Get-Item $clave
+        if ($k) { return $k.GetValueNames() }
+    }
+    return @()
+}
+
+Write-Host "`n  LIMPIEZA DEL CASO" -ForegroundColor Yellow
+if ($Aplicar) { Write-Host "  modo: APLICAR - va a modificar el equipo`n" -ForegroundColor Red }
+else          { Write-Host "  modo: SIMULACRO - no toca nada`n"          -ForegroundColor Green }
 
 # ===========================================================================
-#  A. ¿LLEGO A EJECUTARSE?  Windows lo apunta en cuatro sitios ademas del
-#     prefetch. Basta que uno lo confirme.
+#  A. ¿LLEGO A EJECUTARSE?
+#     El prefetch vino vacio, asi que se miran otros cuatro registros donde
+#     Windows deja rastro de lo que se ejecuto. Basta que uno lo confirme.
 # ===========================================================================
 T "A. ¿SE EJECUTO EL ARCHIVO?"
-$corrio = $false
 $pistas = @()
 
-# --- BAM: el moderador de actividad guarda cada binario ejecutado, con fecha
+# --- BAM / DAM: cada binario ejecutado, con su fecha
 $sid = ([System.Security.Principal.WindowsIdentity]::GetCurrent()).User.Value
-foreach ($svc in @('bam','dam')) {
+foreach ($svc in @('bam', 'dam')) {
     $k = "HKLM:\SYSTEM\CurrentControlSet\Services\$svc\State\UserSettings\$sid"
-    (Get-Item $k).GetValueNames() | Where-Object { $_ -match 'zip|хх|Хх|\.exe$' } | ForEach-Object {
-        if ($_ -match 'хх|Хх|zip\.\d+') {
-            $b = (Get-ItemProperty $k).$_
-            $t = [DateTime]::FromFileTime([BitConverter]::ToInt64($b,0))
-            $pistas += "BAM: $_  ->  ejecutado $t"; $corrio = $true
+    foreach ($n in (NombresDe $k)) {
+        if ($n -match $EJECUCION) {
+            $cuando = ''
+            $b = (Get-ItemProperty -Path $k -Name $n).$n
+            if ($b -is [byte[]] -and $b.Length -ge 8) {
+                $cuando = [DateTime]::FromFileTime([BitConverter]::ToInt64($b, 0))
+            }
+            $pistas += "BAM  : $n   $cuando"
         }
     }
 }
 
-# --- MUICache: se escribe cuando un programa se lanza desde el Explorador
+# --- MUICache: se escribe al lanzar algo desde el Explorador
 $mui = 'HKCU:\Software\Classes\Local Settings\Software\Microsoft\Windows\Shell\MuiCache'
-(Get-Item $mui).GetValueNames() | Where-Object { $_ -match 'хх|Хх|Madium|Installer-1\.1\.0' } |
-    ForEach-Object { $pistas += "MUICache: $_"; $corrio = $true }
+foreach ($n in (NombresDe $mui)) {
+    if ($n -match $EJECUCION) { $pistas += "MUICache : $n" }
+}
 
-# --- UserAssist: cuenta los lanzamientos desde el escritorio
+# --- UserAssist: cuenta los lanzamientos. Guarda los nombres en ROT13.
 $ua = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\UserAssist'
-Get-ChildItem $ua | ForEach-Object {
-    $c = Join-Path $_.PSPath 'Count'
-    (Get-Item $c).GetValueNames() | ForEach-Object {
-        # los nombres van con ROT13
-        $d = -join ($_.ToCharArray() | ForEach-Object {
-            if ($_ -match '[a-m]'){[char](([int]$_)+13)} elseif($_ -match '[n-z]'){[char](([int]$_)-13)}
-            elseif($_ -match '[A-M]'){[char](([int]$_)+13)} elseif($_ -match '[N-Z]'){[char](([int]$_)-13)}
-            else {$_} })
-        if ($d -match 'хх|Хх|Madium|Installer-1\.1\.0') { $pistas += "UserAssist: $d"; $corrio = $true }
+if (Test-Path $ua) {
+    foreach ($sub in (Get-ChildItem $ua)) {
+        $cnt = Join-Path $sub.PSPath 'Count'
+        foreach ($n in (NombresDe $cnt)) {
+            $claro = Rot13 $n
+            if ($claro -match $EJECUCION) { $pistas += "UserAssist : $claro" }
+        }
     }
 }
 
-# --- ficheros .lnk recientes: Windows crea uno al abrir algo
-Get-ChildItem "$env:APPDATA\Microsoft\Windows\Recent" -Filter *.lnk |
-    Where-Object { $_.Name -match 'хх|Хх|Madium|Installer' } |
-    ForEach-Object { $pistas += "Reciente: $($_.Name)  ($($_.LastWriteTime))"; $corrio = $true }
+# --- accesos recientes: Windows crea un .lnk al abrir algo
+foreach ($f in (Get-ChildItem "$env:APPDATA\Microsoft\Windows\Recent" -Filter *.lnk)) {
+    if ($f.Name -match $EJECUCION) { $pistas += "Reciente : $($f.Name)   $($f.LastWriteTime)" }
+}
 
-if ($pistas) { $pistas | ForEach-Object { Write-Host "  [!] $_" -ForegroundColor Red } }
-else { Write-Host "  sin rastro de ejecucion en BAM, MUICache, UserAssist ni Recientes" -ForegroundColor Green }
-
-Write-Host ""
+$corrio = ($pistas.Count -gt 0)
 if ($corrio) {
-    Write-Host "  VEREDICTO: SI se ejecuto. Limpiar no alcanza —" -ForegroundColor Red
-    Write-Host "  hay que rotar credenciales y reinstalar." -ForegroundColor Red
+    foreach ($p in $pistas) { Write-Host "  [!] $p" -ForegroundColor Red }
+    Write-Host "`n  VEREDICTO: SI se ejecuto." -ForegroundColor Red
+    Write-Host "  Limpiar no alcanza: hay que rotar credenciales y reinstalar." -ForegroundColor Red
 } else {
-    Write-Host "  VEREDICTO: no encontramos rastro de que se ejecutara." -ForegroundColor Green
-    Write-Host "  Eso no lo prueba al 100%, pero son cuatro registros distintos" -ForegroundColor DarkGray
-    Write-Host "  y los cuatro estan vacios." -ForegroundColor DarkGray
+    Write-Host "  sin rastro en BAM, MUICache, UserAssist ni Recientes" -ForegroundColor Green
+    Write-Host "`n  VEREDICTO: no encontramos rastro de que se ejecutara." -ForegroundColor Green
+    Write-Host "  No lo prueba al 100%, pero son cuatro registros y los cuatro" -ForegroundColor DarkGray
+    Write-Host "  estan vacios." -ForegroundColor DarkGray
 }
 
 # ===========================================================================
-#  B. LO QUE SE VA A QUITAR
+#  B. LAS TRES PERSISTENCIAS HUERFANAS
 # ===========================================================================
-T "B. LAS TRES PERSISTENCIAS HUERFANAS DE 'svchost'"
+T "B. LAS TRES PERSISTENCIAS DE 'svchost'"
 Write-Host "  (apuntan a C:\ProgramData\svchost, que ya no existe)" -ForegroundColor DarkGray
 
 if ($Aplicar) { New-Item -ItemType Directory -Path $Cuarentena -Force | Out-Null }
+$algo = $false
 
 foreach ($k in @('HKCU:\Software\Microsoft\Windows\CurrentVersion\Run',
                  'HKLM:\Software\Microsoft\Windows\CurrentVersion\Run')) {
-    $v = (Get-ItemProperty $k).svchost
+    $v = (Get-ItemProperty -Path $k -Name 'svchost').svchost
     if ($v) {
-        Hacer "borrar clave de arranque $k :: svchost = $v"
+        $algo = $true
+        Hacer "borrar del arranque: $k :: svchost = $v"
         if ($Aplicar) {
             "$k :: svchost = $v" | Out-File "$Cuarentena\registro_borrado.txt" -Append
             Remove-ItemProperty -Path $k -Name 'svchost'
@@ -110,85 +144,96 @@ foreach ($k in @('HKCU:\Software\Microsoft\Windows\CurrentVersion\Run',
 
 $lnk = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\svchost.lnk"
 if (Test-Path $lnk) {
+    $algo = $true
     Hacer "mover a cuarentena el acceso directo de Inicio: svchost.lnk"
     if ($Aplicar) { Move-Item $lnk "$Cuarentena\svchost.lnk" -Force }
 }
 
-if (Get-ScheduledTask -TaskName 'svchost') {
+if (Get-ScheduledTask -TaskName 'svchost' -ErrorAction SilentlyContinue) {
+    $algo = $true
     Hacer "exportar y borrar la tarea programada 'svchost'"
     if ($Aplicar) {
-        Export-ScheduledTask -TaskName 'svchost' | Out-File "$Cuarentena\tarea_svchost.xml"
+        Export-ScheduledTask -TaskName 'svchost' -ErrorAction SilentlyContinue | Out-File "$Cuarentena\tarea_svchost.xml"
         Unregister-ScheduledTask -TaskName 'svchost' -Confirm:$false
     }
 }
+if (-not $algo) { Write-Host "  ninguna encontrada" -ForegroundColor DarkGray }
 
-T "C. EL ARCHIVO DE HOY Y SUS RESTOS"
-Get-ChildItem "$env:LOCALAPPDATA\Temp" -Directory | Where-Object { $_.Name -match 'zip' } |
-    ForEach-Object {
-        $tieneMuestra = Get-ChildItem $_.FullName -Recurse -File |
-            Where-Object { (Get-FileHash $_.FullName -Algorithm SHA256).Hash -eq $HUELLA }
-        if ($tieneMuestra) {
-            Hacer "mover a cuarentena la carpeta temporal: $($_.Name)"
-            if ($Aplicar) { Move-Item $_.FullName "$Cuarentena\temp_$($_.Name)" -Force }
-        }
+# ===========================================================================
+#  C. EL ARCHIVO DE HOY Y SUS RESTOS
+# ===========================================================================
+T "C. EL ARCHIVO Y SUS RESTOS"
+$algo = $false
+
+foreach ($dir in (Get-ChildItem "$env:LOCALAPPDATA\Temp" -Directory)) {
+    if ($dir.Name -notmatch 'zip') { continue }
+    $hay = $false
+    foreach ($f in (Get-ChildItem $dir.FullName -Recurse -File)) {
+        if ((Get-FileHash $f.FullName -Algorithm SHA256).Hash -eq $HUELLA) { $hay = $true }
     }
-
-foreach ($d in @("$env:USERPROFILE\Downloads","$env:USERPROFILE\Desktop")) {
-    Get-ChildItem $d -File | Where-Object {
-        $_.Name -match 'Installer-1\.1\.0|v\.9\.554|v8\.91\.830' -or
-        ($_.Extension -eq '.exe' -and (Get-FileHash $_.FullName -Algorithm SHA256).Hash -eq $HUELLA)
-    } | ForEach-Object {
-        Hacer "mover a cuarentena: $($_.Name)"
-        if ($Aplicar) { Move-Item $_.FullName "$Cuarentena\$($_.Name).bloqueado" -Force }
+    if ($hay) {
+        $algo = $true
+        Hacer "mover a cuarentena la carpeta temporal: $($dir.Name)"
+        if ($Aplicar) { Move-Item $dir.FullName "$Cuarentena\temp_$($dir.Name)" -Force }
     }
 }
 
-# ===========================================================================
-#  D. LO QUE NO TOCO YO — decision suya
-# ===========================================================================
-T "D. ESTO NO LO QUITO SOLO, DECIDILO VOS"
-Write-Host @"
-  AnyDesk  — control remoto, instalado en 2021, servicio en arranque
-             automatico. Sin conexiones entrantes desde agosto de 2021, o
-             sea que NO es del atacante. Pero si no lo usas, sobra:
-               Configuracion > Aplicaciones > AnyDesk > Desinstalar
+foreach ($d in @("$env:USERPROFILE\Downloads", "$env:USERPROFILE\Desktop")) {
+    foreach ($f in (Get-ChildItem $d -File)) {
+        $coincide = $f.Name -match $PATRON
+        if (-not $coincide -and $f.Extension -eq '.exe') {
+            $coincide = (Get-FileHash $f.FullName -Algorithm SHA256).Hash -eq $HUELLA
+        }
+        if ($coincide) {
+            $algo = $true
+            Hacer "mover a cuarentena: $($f.Name)"
+            if ($Aplicar) { Move-Item $f.FullName "$Cuarentena\$($f.Name).bloqueado" -Force }
+        }
+    }
+}
+if (-not $algo) { Write-Host "  nada encontrado" -ForegroundColor DarkGray }
 
-  Celestial ($CRXCelestial.exe en AppData\Roaming\Celestial)
-           — herramienta de Roblox de origen no oficial, arranca con Windows.
-             Viene del mismo mundo que el archivo de hoy. Si no la usas, fuera.
-"@ -ForegroundColor White
+# ===========================================================================
+#  D. LO QUE NO TOCO YO
+# ===========================================================================
+T "D. ESTO NO LO QUITO SOLO - decidilo vos"
+Write-Host "  AnyDesk   control remoto instalado en 2021, servicio en arranque." -ForegroundColor White
+Write-Host "            Sin conexiones entrantes desde agosto de 2021: NO es del" -ForegroundColor White
+Write-Host "            atacante. Pero si no lo usas, sobra." -ForegroundColor White
+Write-Host "            Configuracion > Aplicaciones > AnyDesk > Desinstalar" -ForegroundColor DarkGray
+Write-Host ""
+Write-Host "  Celestial herramienta de Roblox no oficial que arranca con Windows," -ForegroundColor White
+Write-Host "            en AppData\Roaming\Celestial. Del mismo mundo que el" -ForegroundColor White
+Write-Host "            archivo de hoy. Si no la usas, fuera." -ForegroundColor White
 
 # ===========================================================================
+Write-Host "`n============================================================" -ForegroundColor Yellow
 if (-not $Aplicar) {
-    Write-Host "`n============================================================" -ForegroundColor Yellow
     Write-Host " Esto fue un SIMULACRO. No se toco nada." -ForegroundColor Green
-    Write-Host " Lee el plan. Si estas de acuerdo:" -ForegroundColor Green
+    Write-Host " Si estas de acuerdo con el plan:" -ForegroundColor Green
     Write-Host "   powershell -ExecutionPolicy Bypass -File limpiar_caso.ps1 -Aplicar" -ForegroundColor White
-    Write-Host "============================================================" -ForegroundColor Yellow
 } else {
-    Write-Host "`n============================================================" -ForegroundColor Yellow
     Write-Host " Listo. Todo esta en:" -ForegroundColor Green
     Write-Host "   $Cuarentena" -ForegroundColor White
-    Write-Host " Nada se borro. Si algo era legitimo, se recupera de ahi." -ForegroundColor Green
+    Write-Host " Nada se borro: si algo era legitimo, se recupera de ahi." -ForegroundColor Green
     Write-Host ""
     if ($corrio) {
-        Write-Host " PERO EL ARCHIVO SE EJECUTO. Borrarlo no devuelve lo que" -ForegroundColor Red
-        Write-Host " ya salio. Desde OTRO dispositivo, en este orden:" -ForegroundColor Red
-        Write-Host "   1. Contrasena del CORREO (con el se recupera lo demas)" -ForegroundColor Red
+        Write-Host " PERO EL ARCHIVO SE EJECUTO. Borrarlo no devuelve lo que ya" -ForegroundColor Red
+        Write-Host " salio. Desde OTRO dispositivo, en este orden:" -ForegroundColor Red
+        Write-Host "   1. Contrasena del CORREO" -ForegroundColor Red
         Write-Host "   2. CERRAR TODAS LAS SESIONES en cada servicio" -ForegroundColor Red
-        Write-Host "      (una cookie robada entra sin contrasena y sin 2FA)" -ForegroundColor Red
         Write-Host "   3. Discord, Roblox, Steam, banco" -ForegroundColor Red
-        Write-Host "   4. Activar 2FA en todo" -ForegroundColor Red
+        Write-Host "   4. Activar 2FA" -ForegroundColor Red
         Write-Host "   5. Avisar a tus contactos" -ForegroundColor Red
         Write-Host "   6. Copiar tus archivos y REINSTALAR Windows" -ForegroundColor Red
     } else {
         Write-Host " No hubo rastro de ejecucion, asi que con esto deberia" -ForegroundColor Green
-        Write-Host " alcanzar. Aun asi, cambia la contrasena de Discord y de" -ForegroundColor Green
-        Write-Host " Roblox y activa 2FA: cuesta cinco minutos." -ForegroundColor Green
+        Write-Host " alcanzar. Cambia igual la clave de Discord y Roblox y" -ForegroundColor Green
+        Write-Host " activa 2FA: cuesta cinco minutos." -ForegroundColor Green
     }
-    Write-Host "============================================================" -ForegroundColor Yellow
 }
+Write-Host "============================================================" -ForegroundColor Yellow
 
-try { Stop-Transcript | Out-Null } catch {}
+try { Stop-Transcript | Out-Null } catch { }
 Write-Host "`n  Informe en el Escritorio: resultado_limpieza.txt" -ForegroundColor Cyan
 Read-Host "  Pulsa ENTER para cerrar"
