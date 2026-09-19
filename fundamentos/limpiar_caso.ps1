@@ -164,33 +164,68 @@ if (-not $algo) { Write-Host "  ninguna encontrada" -ForegroundColor DarkGray }
 # ===========================================================================
 T "C. EL ARCHIVO Y SUS RESTOS"
 $algo = $false
+$n = 0
 
-foreach ($dir in (Get-ChildItem "$env:LOCALAPPDATA\Temp" -Directory)) {
-    if ($dir.Name -notmatch 'zip') { continue }
-    $hay = $false
-    foreach ($f in (Get-ChildItem $dir.FullName -Recurse -File)) {
-        if ((Get-FileHash $f.FullName -Algorithm SHA256).Hash -eq $HUELLA) { $hay = $true }
-    }
-    if ($hay) {
-        $algo = $true
-        Hacer "mover a cuarentena la carpeta temporal: $($dir.Name)"
-        if ($Aplicar) { Move-Item $dir.FullName "$Cuarentena\temp_$($dir.Name)" -Force }
+# Se busca EN PROFUNDIDAD y en todos los sitios donde puede haber quedado,
+# incluido el Escritorio redirigido a OneDrive: la primera version solo miraba
+# el nivel superior de Descargas y Escritorio, y se dejaba fuera la copia que
+# de hecho se ejecuto, en OneDrive\Escritorio\...\хх\хх\
+$raices = @(
+    "$env:USERPROFILE\Downloads",
+    "$env:USERPROFILE\Desktop",
+    "$env:USERPROFILE\OneDrive\Escritorio",
+    "$env:USERPROFILE\OneDrive\Desktop",
+    "$env:USERPROFILE\Documents",
+    "$env:LOCALAPPDATA\Temp"
+) | Where-Object { Test-Path $_ } | Sort-Object -Unique
+
+# --- carpetas enteras cuyo nombre delata el origen
+foreach ($r in $raices) {
+    foreach ($dir in (Get-ChildItem $r -Directory -Recurse -Depth 3)) {
+        if ($dir.Name -match '9\.554|[Хх][х]|Madium') {
+            $algo = $true; $n++
+            Hacer "cuarentena carpeta: $($dir.FullName)"
+            if ($Aplicar) { Move-Item $dir.FullName (Join-Path $Cuarentena "carpeta_$n") -Force }
+        }
     }
 }
 
-foreach ($d in @("$env:USERPROFILE\Downloads", "$env:USERPROFILE\Desktop")) {
-    foreach ($f in (Get-ChildItem $d -File)) {
+# --- ficheros sueltos: por nombre, o por huella exacta si es ejecutable
+foreach ($r in $raices) {
+    foreach ($f in (Get-ChildItem $r -File -Recurse -Depth 4)) {
         $coincide = $f.Name -match $PATRON
-        if (-not $coincide -and $f.Extension -eq '.exe') {
+        if (-not $coincide -and $f.Extension -in @('.exe', '.zip')) {
             $coincide = (Get-FileHash $f.FullName -Algorithm SHA256).Hash -eq $HUELLA
         }
         if ($coincide) {
-            $algo = $true
-            Hacer "mover a cuarentena: $($f.Name)"
-            if ($Aplicar) { Move-Item $f.FullName "$Cuarentena\$($f.Name).bloqueado" -Force }
+            $algo = $true; $n++
+            Hacer "cuarentena: $($f.FullName)"
+            if ($Aplicar) { Move-Item $f.FullName (Join-Path $Cuarentena "$n`_$($f.Name).bloqueado") -Force }
         }
     }
 }
+
+# --- el programa "Madium" que se instalo, y su acceso directo del menu Inicio
+foreach ($p in @("$env:LOCALAPPDATA\Programs", "$env:APPDATA", "$env:LOCALAPPDATA")) {
+    foreach ($dir in (Get-ChildItem $p -Directory -ErrorAction SilentlyContinue)) {
+        if ($dir.Name -match 'madium') {
+            $algo = $true; $n++
+            Hacer "cuarentena el programa instalado: $($dir.FullName)"
+            if ($Aplicar) { Move-Item $dir.FullName (Join-Path $Cuarentena "programa_$n") -Force }
+        }
+    }
+}
+foreach ($m in @("$env:APPDATA\Microsoft\Windows\Start Menu\Programs",
+                 "$env:ProgramData\Microsoft\Windows\Start Menu\Programs")) {
+    foreach ($f in (Get-ChildItem $m -Filter *.lnk -Recurse -ErrorAction SilentlyContinue)) {
+        if ($f.Name -match 'madium|9\.554|[Хх][х]') {
+            $algo = $true; $n++
+            Hacer "cuarentena acceso directo: $($f.FullName)"
+            if ($Aplicar) { Move-Item $f.FullName (Join-Path $Cuarentena "lnk_$n`_$($f.Name)") -Force }
+        }
+    }
+}
+
 if (-not $algo) { Write-Host "  nada encontrado" -ForegroundColor DarkGray }
 
 # ===========================================================================
