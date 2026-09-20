@@ -219,10 +219,10 @@ if ($n -eq 0) { Bien "nada sospechoso" }
 # ---------------------------------------------------------------- 13
 T "13. EJECUTABLES SIN FIRMAR EN SITIOS RAROS (ultimos 14 dias)"
 $n = 0
-$IGNORAR = 'Extensions\\|\.minecraft|node_modules|\\cache|\\Cache|Crashpad|\\Code Cache'
+$IGNORAR = 'Extensions\\|\.minecraft|node_modules|\\cache|\\Cache|Crashpad|\\Code Cache|WindowsApps|site-packages|Programs.Python|\nvm|\.cargo|\go.pkg|dist-info'
 foreach ($d in @("$env:APPDATA","$env:LOCALAPPDATA","$env:TEMP","$env:ProgramData","$env:PUBLIC")) {
     Get-ChildItem $d -Recurse -Include *.exe,*.dll,*.scr,*.bat,*.cmd,*.vbs -Depth 2 |
-        Where-Object { $_.LastWriteTime -gt (Get-Date).AddDays(-14) -and $_.FullName -notmatch $IGNORAR } |
+        Where-Object { $_.LastWriteTime -gt (Get-Date).AddDays(-14) -and $_.Length -gt 0 -and $_.FullName -notmatch $IGNORAR } |
         ForEach-Object {
             if (Firmado $_.FullName) { return }
             $kb = [math]::Round($_.Length / 1024)
