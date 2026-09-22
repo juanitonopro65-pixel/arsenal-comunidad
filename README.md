@@ -22,6 +22,12 @@ hace que los trucos tengan sentido.
 |---|---|
 | [La frontera de confianza](teoria/La_Frontera_de_Confianza.md) | La idea que explica casi todos los fallos web: qué controla el cliente, qué el servidor, cómo viajan las sesiones y por qué los JWT no son secretos. Con ejercicios |
 
+## 🎯 Retos paso a paso
+
+| Guía | De qué trata |
+|---|---|
+| [SpookyPass](retos/SpookyPass.md) | **Tu primer reto de ingeniería inversa.** Sin servidor y sin peticiones: un archivo y vos. `file`, `strings`, `ltrace`, `objdump`, `nm`. Y la lección grande — por qué `strings` jura que la flag no está cuando sí está, y qué parámetro lo arregla |
+
 ## 🧰 Fundamentos
 
 | Guía | De qué trata |
