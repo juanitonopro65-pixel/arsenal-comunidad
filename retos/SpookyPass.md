@@ -22,6 +22,55 @@ La diferencia es que ahí el binario era hostil de verdad.
 > ⚠️ Todo esto se practica contra **tu laboratorio, HackTheBox, o algo con
 > permiso escrito**. Nada más.
 
+---
+
+## ⛔ Si estás en Windows, leé esto primero
+
+Todos los comandos de esta guía son de **Linux**. Si los pegás en PowerShell o
+en CMD te va a pasar esto:
+
+```
+strings : El término 'strings' no se reconoce como nombre de un cmdlet,
+función, archivo de script o programa ejecutable.
+```
+
+Eso **no** significa que el comando esté mal. Significa que se lo estás
+pidiendo al programa equivocado. PowerShell no tiene `strings`, ni `file`, ni
+`objdump` — son herramientas de Linux.
+
+**La solución, una vez:** abrí WSL y quedate ahí adentro para toda la guía.
+
+```powershell
+wsl
+```
+
+El prompt cambia de `PS C:\Users\TuNombre>` a algo como
+`┌──(kali㉿maquina)-[~]`. Si no cambió, seguís en Windows.
+
+Tu disco de Windows está montado en `/mnt/c/`, así que para ir a la carpeta
+del reto:
+
+```bash
+cd /mnt/c/Users/TuNombre/Downloads/rev_spookypass
+```
+
+**¿Y si no querés entrar a WSL?** Podés lanzar un comando suelto poniéndole
+`wsl` delante, desde PowerShell:
+
+```powershell
+wsl strings -e L /mnt/c/Users/TuNombre/Downloads/rev_spookypass/pass
+```
+
+Funciona, pero para la guía entera es más cómodo entrar con `wsl` y ya.
+
+> **Cómo saber siempre dónde estás:** si el prompt empieza por `PS` estás en
+> Windows. Si empieza por `┌──(` o por `usuario@maquina:~$` estás en Linux.
+
+**¿No tenés WSL?** En PowerShell **como administrador**: `wsl --install -d kali-linux`,
+reiniciar, y listo.
+
+---
+
 **Lo que necesitás:** una terminal Linux (WSL con Kali sirve). Nada más.
 
 ---
@@ -420,6 +469,11 @@ lo que corre en la máquina del otro deja de ser secreto. Compilar no es cifrar.
 - **Creerle a la herramienta cuando dice que no hay nada.** Ese fue el reto
   entero.
 - **Olvidar `chmod +x`.** Si te dice `Permission denied`, es eso.
+- **Pegar los comandos en PowerShell.** Si leés
+  `'strings' no se reconoce como nombre de un cmdlet`, no está mal el comando:
+  estás en Windows y hace falta Linux. Escribí `wsl` y volvé a probar.
+- **Estar en la carpeta equivocada.** Si te dice `No such file or directory`,
+  hacé `ls` y mirá si `pass` está ahí. Casi siempre falta un `cd`.
 
 ---
 
