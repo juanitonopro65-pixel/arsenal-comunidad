@@ -27,6 +27,7 @@ hace que los trucos tengan sentido.
 | Guía | De qué trata |
 |---|---|
 | [SpookyPass](retos/SpookyPass.md) | **Tu primer reto de ingeniería inversa.** Sin servidor y sin peticiones: un archivo y vos. `file`, `strings`, `ltrace`, `objdump`, `nm`. Y la lección grande — por qué `strings` jura que la flag no está cuando sí está, y qué parámetro lo arregla |
+| [Aidor](retos/Aidor.md) | **IDOR de principio a fin**, cambiando un número en la URL. Enumerar usuarios, romper un SHA-256 con `rockyou`, saltar a SSH — y la idea fina: cómo una función **bien escrita** acaba siendo explotable porque otra le envenenó la sesión |
 
 ## 🧰 Fundamentos
 
