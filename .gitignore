@@ -1,0 +1,7 @@
+# Caso vivo: contiene webhooks de exfiltracion y el dominio.
+# NO se publica hasta que las plataformas actuen. Ver vulnhunt/EXPERIENCIA.md seccion 5.
+fundamentos/caso_minepacks/
+
+# Binarios compilados: cada uno los compila en su maquina.
+clases/**/sensorlog
+!clases/**/sensorlog.c

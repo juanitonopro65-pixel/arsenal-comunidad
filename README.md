@@ -9,6 +9,12 @@ hace que los trucos tengan sentido.
 
 ---
 
+## 🚪 ¿Primera vez aquí?
+
+**[Empeza aqui](EMPEZA_AQUI.md)** — que instalar, en que orden leer, cuanto tarda cada cosa, y como preguntar de forma que te contesten.
+
+---
+
 ## 📐 Método
 
 | Guía | De qué trata |
@@ -20,6 +26,7 @@ hace que los trucos tengan sentido.
 
 | Guía | De qué trata |
 |---|---|
+| [Puertos y protocolos](teoria/Puertos_y_Protocolos.md) | **La base de todo.** La IP lleva a la maquina, el puerto lleva al programa. TCP frente a UDP y por que uno se escanea bien y el otro no, los puertos que de verdad vas a encontrar, leer un banner — y las dos cosas que casi nadie ve: la diferencia entre `127.0.0.1` y `0.0.0.0`, y por que nmap sin `-sV` **adivina**. Con ejercicios |
 | [La frontera de confianza](teoria/La_Frontera_de_Confianza.md) | La idea que explica casi todos los fallos web: qué controla el cliente, qué el servidor, cómo viajan las sesiones y por qué los JWT no son secretos. Con ejercicios |
 
 ## 🎯 Retos paso a paso
@@ -36,16 +43,19 @@ hace que los trucos tengan sentido.
 | [Una versión vieja no es una vulnerabilidad](fundamentos/Version_Vieja_No_Es_Vulnerabilidad.md) | Qué te dice un banner, cómo leer un CVE en 60 segundos, **cómo saber si un exploit es falso**, y cómo responder a una petición dudosa |
 | [El instalador falso del "trabajo de scripter"](fundamentos/Instalador_Falso_Roblox.md) | Caso real analizado sin ejecutarlo: cómo reconocer un dropper empaquetado, cómo comprobar tu equipo y qué hacer si cayó. Incluye [`revisar_pc.ps1`](fundamentos/revisar_pc.ps1) para detectar, [`limpiar_caso.ps1`](fundamentos/limpiar_caso.ps1) para eliminar y [`barrido_persistencia.ps1`](fundamentos/barrido_persistencia.ps1) para comprobar que no vuelva |
 | [Kali Live con persistencia](fundamentos/Kali_Live_Persistencia.md) | Montar un entorno de trabajo desde cero |
+| [Desempaquetar sin romperle el cifrado](fundamentos/desempaquetar_sin_romper/README.md) | Caso real: un instalador falso con **0/47 en VirusTotal** y el codigo cifrado de verdad (entropia 8,0). Como medir si algo esta cifrado o solo codificado, y los tres puntos por los que un programa **no puede escapar**: `Function`, `createDecipheriv` y los modulos que le faltan. Monta el laboratorio aislado y termina con la regla que decide el caso: **no afirmes negativos** |
 
 ---
 
 ## 🚦 Por dónde empezar
 
-1. **[La frontera de confianza](teoria/La_Frontera_de_Confianza.md)** — sin esto,
+1. **[Puertos y protocolos](teoria/Puertos_y_Protocolos.md)** — la base: que hay
+   al otro lado antes de tocar nada.
+2. **[La frontera de confianza](teoria/La_Frontera_de_Confianza.md)** — sin esto,
    todo lo demás es copiar comandos.
-2. **[Leer antes de atacar](metodo/Leer_Antes_de_Atacar.md)** — tu primer reto,
+3. **[Leer antes de atacar](metodo/Leer_Antes_de_Atacar.md)** — tu primer reto,
    con cuatro comandos.
-3. **[El orden del ataque](metodo/El_Orden_del_Ataque.md)** — el método completo,
+4. **[El orden del ataque](metodo/El_Orden_del_Ataque.md)** — el método completo,
    para cuando el reto tenga código fuente.
 
 ---

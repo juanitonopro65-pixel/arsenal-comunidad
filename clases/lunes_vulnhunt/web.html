@@ -1,0 +1,319 @@
+<title>El Umbral</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* Layout: una columna de lectura estrecha; el umbral como pieza central ancha. */
+  :root{
+    --bg:#f4f3f0; --panel:#ffffff; --line:#d9d6cf;
+    --fg:#22201d; --dim:#6b6660; --faint:#8d877f;
+    --dentro:#1f7a5c; --ciega:#a86a09; --rota:#b2372c;
+    --dentro-bg:#e3f2ea; --ciega-bg:#fbf0d8; --rota-bg:#fbe5e2;
+    --code-bg:#faf9f6;
+    --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#16171a; --panel:#1d1f23; --line:#33363c;
+      --fg:#e8e6e1; --dim:#a4a09a; --faint:#7c7872;
+      --dentro:#4fc194; --ciega:#e0a53a; --rota:#f0776a;
+      --dentro-bg:#16302a; --ciega-bg:#332913; --rota-bg:#331f1d;
+      --code-bg:#131417;
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#16171a; --panel:#1d1f23; --line:#33363c;
+    --fg:#e8e6e1; --dim:#a4a09a; --faint:#7c7872;
+    --dentro:#4fc194; --ciega:#e0a53a; --rota:#f0776a;
+    --dentro-bg:#16302a; --ciega-bg:#332913; --rota-bg:#331f1d;
+    --code-bg:#131417;
+    color-scheme:dark;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--fg);
+    font-family:var(--sans); font-size:16px; line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:720px; margin:0 auto; padding-inline:20px; padding-block:0 72px}
+  h1,h2,h3{text-wrap:balance; line-height:1.2; margin:0}
+  a{color:inherit}
+
+  /* --- cabecera --- */
+  header{padding-block:56px 40px; border-bottom:1px solid var(--line)}
+  .eyebrow{
+    font-family:var(--mono); font-size:12px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--faint); margin-bottom:18px;
+  }
+  h1{font-family:var(--mono); font-weight:700; font-size:clamp(38px,9vw,60px); letter-spacing:-.02em}
+  .lede{margin-top:20px; font-size:19px; color:var(--dim); max-width:56ch}
+  .lede strong{color:var(--fg); font-weight:600}
+
+  /* --- el umbral, pieza central --- */
+  .umbral{margin-block:40px}
+  .cinta{display:flex; gap:6px; overflow-x:auto; padding-bottom:10px; scrollbar-width:thin}
+  .celda{
+    flex:0 0 auto; min-width:72px; text-align:center;
+    border:1px solid var(--line); border-radius:3px; padding:12px 8px;
+    background:var(--panel);
+  }
+  .celda .n{font-family:var(--mono); font-weight:700; font-size:20px; font-variant-numeric:tabular-nums}
+  .celda .e{font-family:var(--mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; margin-top:6px; display:block}
+  .c-dentro{background:var(--dentro-bg); border-color:var(--dentro)}
+  .c-dentro .n,.c-dentro .e{color:var(--dentro)}
+  .c-ciega{background:var(--ciega-bg); border-color:var(--ciega)}
+  .c-ciega .n,.c-ciega .e{color:var(--ciega)}
+  .c-rota{background:var(--rota-bg); border-color:var(--rota)}
+  .c-rota .n,.c-rota .e{color:var(--rota)}
+
+  .leyenda{display:flex; flex-wrap:wrap; gap:14px 22px; margin-top:16px; font-size:14px; color:var(--dim)}
+  .leyenda span{display:flex; align-items:center; gap:8px}
+  .punto{width:10px; height:10px; border-radius:2px; flex:0 0 auto}
+
+  /* --- bloques --- */
+  section{padding-block:40px; border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:0}
+  h2{font-family:var(--mono); font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--faint); margin-bottom:22px}
+  h3{font-size:24px; font-weight:600; margin-bottom:14px; margin-top:32px}
+  h3:first-of-type{margin-top:0}
+  p{margin:0 0 16px}
+  p:last-child{margin-bottom:0}
+  ul{margin:0 0 16px; padding-left:22px}
+  li{margin-bottom:8px}
+
+  /* --- codigo --- */
+  .cmd{position:relative; margin:0 0 18px}
+  pre{
+    margin:0; background:var(--code-bg); border:1px solid var(--line); border-radius:4px;
+    padding:14px 16px; overflow-x:auto; font-family:var(--mono); font-size:13.5px; line-height:1.6;
+  }
+  pre.salida{color:var(--dim); background:transparent; border-style:dashed}
+  code{font-family:var(--mono); font-size:.92em; background:var(--code-bg); padding:1px 5px; border-radius:3px; border:1px solid var(--line)}
+  pre code{background:none; padding:0; border:0}
+  .copiar{
+    position:absolute; top:8px; right:8px; font-family:var(--mono); font-size:11px;
+    background:var(--panel); color:var(--dim); border:1px solid var(--line); border-radius:3px;
+    padding:4px 9px; cursor:pointer; opacity:.75;
+  }
+  .copiar:hover,.copiar:focus-visible{opacity:1; color:var(--fg)}
+
+  /* --- avisos --- */
+  .aviso{
+    border-left:3px solid var(--ciega); background:var(--ciega-bg);
+    padding:16px 18px; border-radius:0 4px 4px 0; margin:0 0 22px; font-size:15px;
+  }
+  .aviso strong{color:var(--ciega)}
+  .clave{
+    border:1px solid var(--line); border-left:3px solid var(--rota); background:var(--panel);
+    padding:20px 22px; border-radius:0 4px 4px 0; margin:26px 0;
+  }
+  .clave p{font-size:19px; font-weight:600; margin:0}
+
+  /* --- tabla --- */
+  .tabla-caja{overflow-x:auto; margin:0 0 18px}
+  table{border-collapse:collapse; width:100%; font-size:14.5px; min-width:340px}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--line)}
+  th{font-family:var(--mono); font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--faint); font-weight:500}
+  td.num{font-family:var(--mono); font-variant-numeric:tabular-nums; text-align:right}
+  .si{color:var(--rota); font-weight:600}
+  .no{color:var(--dentro); font-weight:600}
+
+  footer{padding-block:36px 0; color:var(--faint); font-size:14px}
+  @media (max-width:520px){
+    header{padding-block:40px 32px}
+    .lede{font-size:17px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Arsenal de la comunidad · clase del lunes</div>
+  <h1>El Umbral</h1>
+  <p class="lede">Cómo se encuentra un fallo que se paga. El patrón que vas a aprender hoy es <strong>el mismo</strong> que hay detrás de los casos que tengo abiertos ahora mismo en Zero Day Initiative. Cambia el programa, no el bug.</p>
+
+  <div class="umbral">
+    <div class="cinta">
+      <div class="celda c-dentro"><span class="n">98</span><span class="e">ok</span></div>
+      <div class="celda c-dentro"><span class="n">99</span><span class="e">ok</span></div>
+      <div class="celda c-dentro"><span class="n">100</span><span class="e">ok</span></div>
+      <div class="celda c-ciega"><span class="n">101</span><span class="e">ok</span></div>
+      <div class="celda c-rota"><span class="n">102</span><span class="e">sigsegv</span></div>
+      <div class="celda c-rota"><span class="n">103</span><span class="e">sigsegv</span></div>
+      <div class="celda c-rota"><span class="n">104</span><span class="e">sigsegv</span></div>
+    </div>
+    <div class="leyenda">
+      <span><i class="punto" style="background:var(--dentro)"></i> dentro de la tabla</span>
+      <span><i class="punto" style="background:var(--ciega)"></i> ya escribe fuera, y no revienta</span>
+      <span><i class="punto" style="background:var(--rota)"></i> revienta</span>
+    </div>
+  </div>
+
+  <p class="lede">El fallo empieza en 101. El crash empieza en 102. <strong>Esa casilla de en medio es toda la clase.</strong></p>
+</header>
+
+<section>
+  <h2>Antes de nada</h2>
+  <div class="aviso">
+    <strong>Solo contra lo tuyo.</strong> Esto se practica en tu propio laboratorio, en HackTheBox, o contra algo con permiso escrito. El programa de hoy lo escribimos nosotros justamente para eso: es nuestro, rompelo todo lo que quieras.
+  </div>
+  <p>Y una regla que vale para siempre: <strong>si encontrás un fallo en software real, no se publica.</strong> Se reporta al fabricante y se espera el parche. Publicarlo antes deja gente expuesta, y además quema el hallazgo, que es lo único que se paga.</p>
+
+  <h3>Si estás en Windows</h3>
+  <p>Los comandos son de Linux. Si los pegás en PowerShell te va a decir que no reconoce <code>gcc</code>, y no es que el comando esté mal: se lo estás pidiendo al programa equivocado. Abrí WSL una vez y quedate ahí toda la clase.</p>
+  <div class="cmd"><pre><code>wsl</code></pre><button class="copiar" data-c="wsl">copiar</button></div>
+  <p>Si te dice que no encuentra la distro, probá <code>wsl -d kali-linux</code>.</p>
+</section>
+
+<section>
+  <h2>01 · El programa</h2>
+  <p>Tenemos <code>sensorlog</code>, un visor de registros de sensores. Lee ficheros <code>.slog</code>, con un formato sencillo a propósito:</p>
+  <pre class="salida">bytes 0-3    la magia: las letras SLOG
+bytes 4-7    cuántos registros hay (un número de 32 bits)
+desde el 8   los registros, 16 bytes cada uno</pre>
+  <p>Compilalo:</p>
+  <div class="cmd"><pre><code>gcc -g -fno-stack-protector -o sensorlog sensorlog.c</code></pre><button class="copiar" data-c="gcc -g -fno-stack-protector -o sensorlog sensorlog.c">copiar</button></div>
+  <div class="aviso">
+    <strong>¿Qué es <code>-fno-stack-protector</code>?</strong> Los compiladores modernos meten una defensa automática que detecta algunos desbordamientos. La apagamos para ver el fallo desnudo. En software real esa defensa a veces está y a veces no — y aprender a distinguir <em>"no hay bug"</em> de <em>"hay bug pero la defensa lo tapa"</em> es media carrera.
+  </div>
+  <p>Ahora un fichero normal:</p>
+  <div class="cmd"><pre><code>python3 gen.py sano.slog 50
+./sensorlog sano.slog</code></pre><button class="copiar" data-c="python3 gen.py sano.slog 50&#10;./sensorlog sano.slog">copiar</button></div>
+  <pre class="salida">registros declarados: 50
+leidos. primer registro: sensor0      = 0</pre>
+  <p><strong>Ese es tu control sano.</strong> Guardalo. Si más adelante algo raro pasa, volvés a correr esto: si el sano también falla, el roto no es el programa — es tu medición.</p>
+</section>
+
+<section>
+  <h2>02 · Rompelo</h2>
+  <p>El fichero dice cuántos registros trae. ¿Qué pasa si dice muchos?</p>
+  <div class="cmd"><pre><code>python3 gen.py roto.slog 500
+./sensorlog roto.slog</code></pre><button class="copiar" data-c="python3 gen.py roto.slog 500&#10;./sensorlog roto.slog">copiar</button></div>
+  <pre class="salida">registros declarados: 500
+Segmentation fault</pre>
+  <p><strong>Segmentation fault</strong> quiere decir que el programa tocó memoria que no era suya y el sistema operativo lo mató.</p>
+  <p>Mirá el código de salida, que es lo que vas a leer cuando esto corra automatizado y no puedas ver la pantalla:</p>
+  <div class="cmd"><pre><code>./sensorlog roto.slog; echo "codigo: $?"</code></pre><button class="copiar" data-c="./sensorlog roto.slog; echo &quot;codigo: $?&quot;">copiar</button></div>
+  <pre class="salida">codigo: 139</pre>
+  <p><strong>139 = 128 + 11.</strong> El 11 es SIGSEGV. Cuando un programa muere por una señal, el código de salida es 128 más el número de la señal. Vas a ver ese 139 mil veces en tu vida.</p>
+</section>
+
+<section>
+  <h2>03 · ¿Dónde empieza exactamente?</h2>
+  <p>Aquí es donde la mayoría se queda corta. Ya sabemos que 500 revienta y 50 no. <strong>¿Dónde está la frontera?</strong></p>
+  <p>Esto se llama <strong>bisección</strong>, y es lo que convierte <em>"encontré un crash"</em> en un reporte que alguien paga.</p>
+  <div class="cmd"><pre><code>for n in 99 100 101 102 103; do
+  python3 gen.py x.slog $n
+  ./sensorlog x.slog &gt;/dev/null 2&gt;&amp;1
+  echo "$n registros -&gt; codigo $?"
+done</code></pre><button class="copiar" data-c="for n in 99 100 101 102 103; do&#10;  python3 gen.py x.slog $n&#10;  ./sensorlog x.slog >/dev/null 2>&amp;1&#10;  echo &quot;$n registros -> codigo $?&quot;&#10;done">copiar</button></div>
+  <pre class="salida"> 99 registros -&gt; codigo 0
+100 registros -&gt; codigo 0
+101 registros -&gt; codigo 0
+102 registros -&gt; codigo 139</pre>
+
+  <h3>Y ahora lo que importa de verdad</h3>
+  <p>Abrí el código y mirá esto:</p>
+  <pre><code>#define MAX_REGISTROS 100
+struct registro tabla[MAX_REGISTROS];</code></pre>
+  <p>La tabla tiene capacidad para <strong>100</strong> registros. En C se numeran desde cero, así que las posiciones válidas son <strong>0 a 99</strong>.</p>
+  <div class="tabla-caja">
+  <table>
+    <thead><tr><th>declarás</th><th>escribe hasta</th><th>¿está dentro?</th><th>¿revienta?</th></tr></thead>
+    <tbody>
+      <tr><td class="num">100</td><td class="num">99</td><td>sí</td><td class="no">no</td></tr>
+      <tr><td class="num"><strong>101</strong></td><td class="num"><strong>100</strong></td><td><strong style="color:var(--ciega)">NO — ya está fuera</strong></td><td class="no">no</td></tr>
+      <tr><td class="num">102</td><td class="num">101</td><td>no</td><td class="si">sí</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="clave"><p>«Fuera de límites» y «crash» no son lo mismo.<br>El fallo empieza en 101. El crash empieza en 102.</p></div>
+
+  <p>¿Por qué? Porque justo después de la tabla hay más memoria que sí está asignada al programa: otras variables, restos de la pila. Escribir ahí es un error grave, pero el sistema operativo no se entera — sigue siendo memoria del proceso. Solo cuando te alejás lo suficiente tocás algo que importa, y ahí sí te mata.</p>
+  <p><strong>Si solo buscás crashes, reportás 102 y estás equivocado.</strong> El defecto empieza en 101, y esa diferencia de uno es exactamente lo que un revisor mira para decidir si entendiste el bug o solo tropezaste con él.</p>
+</section>
+
+<section>
+  <h2>04 · El patrón</h2>
+  <p>Mirá las dos líneas juntas:</p>
+  <pre><code>struct registro tabla[MAX_REGISTROS];        /* ① el tamaño es FIJO: 100 */
+
+for (unsigned int i = 0; i &lt; cuantos; i++) { /* ② el bucle lo manda el FICHERO */
+    if (fread(&amp;tabla[i], 1, 16, f) != 16) break;
+}</code></pre>
+  <div class="clave"><p>Una cantidad decide el tamaño del sitio. Otra cantidad decide cuánto se escribe. Y nadie las compara.</p></div>
+  <p>La comprobación que falta es de una línea:</p>
+  <pre><code>if (cuantos &gt; MAX_REGISTROS) cuantos = MAX_REGISTROS;</code></pre>
+  <p>Eso es todo. Un bug que puede valer miles de dólares es, casi siempre, <strong>una comparación que nadie escribió</strong>.</p>
+
+  <h3>Por qué esto se paga</h3>
+  <p>El patrón aparece en todas partes porque es fácil de cometer:</p>
+  <ul>
+    <li>el que reservó la memoria y el que escribió el bucle <strong>no son la misma persona</strong> — o son la misma con seis meses de diferencia</li>
+    <li>el formato se diseñó cuando 100 parecía muchísimo</li>
+    <li>funciona perfecto con todos los ficheros normales, y nadie prueba con uno raro</li>
+  </ul>
+  <p>Y se paga porque si controlás <strong>qué</strong> se escribe fuera y <strong>hasta dónde</strong>, en algunos casos podés hacer que el programa ejecute lo que vos quieras. Ahí deja de ser «se cerró el programa» y pasa a ser «alguien entró».</p>
+</section>
+
+<section>
+  <h2>05 · Probalo como un profesional</h2>
+  <p>Un crash que pasa una vez no vale nada. Podría ser tu máquina, un cable, la luna. Hay que demostrar que <strong>siempre</strong> pasa:</p>
+  <div class="cmd"><pre><code>python3 gen.py prueba.slog 113
+for i in 1 2 3 4 5; do ./sensorlog prueba.slog &gt;/dev/null 2&gt;&amp;1; echo "codigo $?"; done</code></pre><button class="copiar" data-c="python3 gen.py prueba.slog 113&#10;for i in 1 2 3 4 5; do ./sensorlog prueba.slog >/dev/null 2>&amp;1; echo &quot;codigo $?&quot;; done">copiar</button></div>
+  <p>Los cinco tienen que dar 139. Y después el sano, otras cinco veces — los cinco tienen que dar 0.</p>
+  <div class="aviso">
+    <strong>Los dos controles, siempre.</strong> Si solo probás el roto, no sabés si el programa está roto o si <em>todo</em> se rompe en tu máquina. El control sano es el que te dice que tu medición funciona.
+  </div>
+</section>
+
+<section>
+  <h2>Errores comunes</h2>
+  <h3>«Me dice <code>gcc: command not found</code>»</h3>
+  <p>Estás en PowerShell. Escribí <code>wsl</code> y volvé a intentar.</p>
+  <h3>«No revienta en mi máquina»</h3>
+  <p>Comprobá que compilaste con <code>-fno-stack-protector</code>. Sin eso, el compilador mete una defensa que puede matar el programa antes con otro mensaje (<code>stack smashing detected</code>) — que también es un hallazgo, pero es otro.</p>
+  <h3>«Me da un umbral distinto»</h3>
+  <p>Puede pasar, y no está mal. El número exacto depende de cómo tu compilador ordenó las variables en la pila. Lo que <em>no</em> cambia es la forma: hay un tramo donde ya escribe fuera sin reventar, y después revienta. Reportá <strong>tu</strong> número medido, no el mío.</p>
+  <h3>«¿Y si el <code>break</code> del <code>fread</code> salva el programa?»</h3>
+  <p>Buena pregunta, y es la trampa del ejercicio. El <code>break</code> corta cuando el fichero se acaba — pero para entonces ya escribió. Y si el fichero <em>sí</em> trae los 500 registros, no corta nunca.</p>
+</section>
+
+<section>
+  <h2>Qué hacer ahora</h2>
+  <ul>
+    <li><strong>Cambiá <code>MAX_REGISTROS</code> a 20</strong> y volvé a buscar el umbral. ¿Se movió lo que esperabas?</li>
+    <li><strong>Agregá la comprobación que falta</strong> y comprobá que 500 ya no revienta. Ese es el parche — y escribirlo es parte del reporte: en ZDI lo piden.</li>
+    <li><strong>Buscá el mismo patrón en otro sitio.</strong> Cualquier programa que lea un formato con un campo de cantidad es candidato. La pregunta es siempre la misma: <em>¿quién dimensiona el sitio, y quién manda el bucle?</em></li>
+  </ul>
+  <h3>Para la próxima</h3>
+  <p>Esto fue el bug en la <strong>pila</strong>, la memoria de las variables locales. El mismo patrón existe en el <strong>montón</strong> (<code>malloc</code>), y ahí es más interesante porque hay más cosas alrededor que corromper.</p>
+  <p>Y la pregunta que abre la clase siguiente: cuando no tenés el código fuente —que es el caso real— <strong>¿cómo encontrás este mismo bucle mirando solo el binario?</strong> Eso es reversing, y es lo que pidió Kaijulele.</p>
+</section>
+
+<footer>Arsenal de la comunidad · <code>sensorlog.c</code>, <code>gen.py</code> y el binario van con esta guía</footer>
+
+</div>
+
+<script>
+  document.querySelectorAll(".copiar").forEach(function(b){
+    b.addEventListener("click", function(){
+      var t = b.getAttribute("data-c");
+      var listo = function(){ var o=b.textContent; b.textContent="copiado"; setTimeout(function(){b.textContent=o;},1400); };
+      try{
+        navigator.clipboard.writeText(t).then(listo, function(){ seleccionar(b); });
+      }catch(e){ seleccionar(b); }
+    });
+  });
+  function seleccionar(b){
+    var pre = b.parentNode.querySelector("pre");
+    if(!pre) return;
+    var r = document.createRange(); r.selectNodeContents(pre);
+    var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    b.textContent = "seleccionado";
+    setTimeout(function(){ b.textContent = "copiar"; }, 1600);
+  }
+</script>

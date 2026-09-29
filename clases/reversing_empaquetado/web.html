@@ -1,0 +1,581 @@
+<title>Que Se Abra Solo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* Layout: columna de lectura estrecha; la regla de entropia y la pila de capas
+     son las dos piezas anchas que abren y estructuran la clase.
+     Misma identidad que "El Umbral" — es la segunda clase de la serie. */
+  :root{
+    --bg:#f4f3f0; --panel:#ffffff; --line:#d9d6cf;
+    --fg:#22201d; --dim:#6b6660; --faint:#8d877f;
+    --texto:#1f7a5c; --codif:#a86a09; --cifra:#b2372c;
+    --texto-bg:#e3f2ea; --codif-bg:#fbf0d8; --cifra-bg:#fbe5e2;
+    --code-bg:#faf9f6;
+    --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#16171a; --panel:#1d1f23; --line:#33363c;
+      --fg:#e8e6e1; --dim:#a4a09a; --faint:#7c7872;
+      --texto:#4fc194; --codif:#e0a53a; --cifra:#f0776a;
+      --texto-bg:#16302a; --codif-bg:#332913; --cifra-bg:#331f1d;
+      --code-bg:#131417;
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#16171a; --panel:#1d1f23; --line:#33363c;
+    --fg:#e8e6e1; --dim:#a4a09a; --faint:#7c7872;
+    --texto:#4fc194; --codif:#e0a53a; --cifra:#f0776a;
+    --texto-bg:#16302a; --codif-bg:#332913; --cifra-bg:#331f1d;
+    --code-bg:#131417;
+    color-scheme:dark;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--fg);
+    font-family:var(--sans); font-size:16px; line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:720px; margin:0 auto; padding-inline:20px; padding-block:0 72px}
+  h1,h2,h3{text-wrap:balance; line-height:1.2; margin:0}
+  a{color:inherit}
+
+  header{padding-block:56px 40px; border-bottom:1px solid var(--line)}
+  .eyebrow{
+    font-family:var(--mono); font-size:12px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--faint); margin-bottom:18px;
+  }
+  h1{font-family:var(--mono); font-weight:700; font-size:clamp(38px,9vw,60px); letter-spacing:-.02em}
+  .lede{margin-top:20px; font-size:19px; color:var(--dim); max-width:56ch}
+  .lede strong{color:var(--fg); font-weight:600}
+
+  /* --- ficha de la muestra --- */
+  .ficha{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px;
+    background:var(--line); border:1px solid var(--line); border-radius:4px;
+    margin-top:32px; overflow:hidden;
+  }
+  .ficha div{background:var(--panel); padding:14px 16px; min-width:0}
+  .ficha dt{font-family:var(--mono); font-size:11px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--faint); margin:0 0 6px}
+  .ficha dd{margin:0; font-family:var(--mono); font-size:17px; font-weight:600;
+    font-variant-numeric:tabular-nums; overflow-wrap:anywhere}
+  .ficha .alerta dd{color:var(--cifra)}
+
+  /* --- regla de entropia: pieza central --- */
+  .regla{margin-block:36px}
+  .pista{
+    position:relative; height:46px; border:1px solid var(--line); border-radius:3px;
+    background:linear-gradient(90deg,var(--texto-bg) 0%,var(--texto-bg) 50%,
+      var(--codif-bg) 62%,var(--codif-bg) 82%,var(--cifra-bg) 94%,var(--cifra-bg) 100%);
+    overflow:hidden;
+  }
+  .tick{position:absolute; top:0; bottom:0; width:1px; background:var(--line)}
+  .tick i{
+    position:absolute; bottom:5px; left:4px; font-style:normal;
+    font-family:var(--mono); font-size:10px; color:var(--faint);
+  }
+  .marca{position:absolute; top:0; bottom:0; width:2px}
+  .m-texto{background:var(--texto)} .m-codif{background:var(--codif)} .m-cifra{background:var(--cifra)}
+  .etiquetas{position:relative; height:52px; margin-top:8px}
+  .et{
+    position:absolute; top:0; font-family:var(--mono); font-size:12px; line-height:1.4;
+    max-width:132px;
+  }
+  .et b{display:block; font-size:15px; font-weight:700; font-variant-numeric:tabular-nums}
+  .et span{color:var(--dim)}
+  .e-texto{color:var(--texto)} .e-codif{color:var(--codif)} .e-cifra{color:var(--cifra)}
+  .et.derecha{text-align:right}
+
+  /* --- pila de capas --- */
+  .pila{display:flex; flex-direction:column; gap:0; margin-block:32px}
+  .capa{
+    border:1px solid var(--line); border-radius:4px; background:var(--panel);
+    padding:16px 18px; min-width:0;
+  }
+  .capa .cab{display:flex; flex-wrap:wrap; gap:6px 14px; align-items:baseline}
+  .capa .rol{font-family:var(--mono); font-size:11px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--faint)}
+  .capa .tam{font-family:var(--mono); font-weight:700; font-size:20px;
+    font-variant-numeric:tabular-nums}
+  .capa p{margin:8px 0 0; font-size:14.5px; color:var(--dim)}
+  .capa.final{border-color:var(--cifra); background:var(--cifra-bg)}
+  .capa.final .tam{color:var(--cifra)}
+  .capa.final p{color:var(--fg)}
+  .gancho{
+    display:flex; align-items:center; gap:10px; padding:10px 18px;
+    font-family:var(--mono); font-size:12.5px; color:var(--dim);
+  }
+  .gancho::before{
+    content:""; width:1px; height:26px; background:var(--line); flex:0 0 auto; margin-left:8px;
+  }
+  .gancho code{background:none; padding:0; color:var(--fg); font-weight:600}
+
+  section{padding-block:40px; border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:0}
+  h2{font-family:var(--mono); font-size:13px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--faint); margin-bottom:22px}
+  h3{font-size:24px; font-weight:600; margin-bottom:14px; margin-top:32px}
+  h3:first-of-type{margin-top:0}
+  p{margin:0 0 16px}
+  p:last-child{margin-bottom:0}
+  ul,ol{margin:0 0 16px; padding-left:22px}
+  li{margin-bottom:8px}
+  strong{font-weight:600}
+  code{font-family:var(--mono); font-size:.92em; background:var(--code-bg);
+    border:1px solid var(--line); border-radius:3px; padding:1px 5px}
+
+  .cmd{position:relative; margin:0 0 18px}
+  pre{
+    margin:0; background:var(--code-bg); border:1px solid var(--line); border-radius:4px;
+    padding:14px 16px; overflow-x:auto; font-family:var(--mono);
+    font-size:13.5px; line-height:1.6;
+  }
+  pre code{background:none; border:0; padding:0; font-size:inherit}
+  .copiar{
+    position:absolute; top:8px; right:8px; font-family:var(--mono); font-size:11px;
+    letter-spacing:.06em; text-transform:uppercase; color:var(--faint);
+    background:var(--panel); border:1px solid var(--line); border-radius:3px;
+    padding:4px 9px; cursor:pointer;
+  }
+  .copiar:hover{color:var(--fg); border-color:var(--faint)}
+  .copiar:focus-visible{outline:2px solid var(--codif); outline-offset:2px}
+
+  .nota{
+    border-left:3px solid var(--codif); background:var(--codif-bg);
+    padding:14px 18px; margin:0 0 18px; border-radius:0 4px 4px 0;
+  }
+  .nota p{margin:0}
+  .nota p + p{margin-top:10px}
+  .regla-oro{
+    border:1px solid var(--texto); background:var(--texto-bg);
+    padding:18px 20px; border-radius:4px; margin:0 0 18px;
+  }
+  .regla-oro p{margin:0; font-size:17px}
+  .regla-oro .tit{
+    font-family:var(--mono); font-size:11px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--texto); margin-bottom:8px;
+  }
+
+  table{border-collapse:collapse; width:100%; font-size:14.5px}
+  .tabla-cont{overflow-x:auto; margin:0 0 18px; border:1px solid var(--line); border-radius:4px}
+  th,td{text-align:left; padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  th{font-family:var(--mono); font-size:11px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--faint); font-weight:500;
+    background:var(--code-bg); white-space:nowrap}
+  td:first-child{font-family:var(--mono); white-space:nowrap}
+
+  ol.ejercicios{counter-reset:ej; list-style:none; padding-left:0}
+  ol.ejercicios li{
+    counter-increment:ej; position:relative; padding-left:42px; margin-bottom:18px;
+  }
+  ol.ejercicios li::before{
+    content:counter(ej); position:absolute; left:0; top:1px;
+    font-family:var(--mono); font-weight:700; font-size:14px; color:var(--codif);
+    border:1px solid var(--codif); border-radius:3px;
+    width:28px; height:26px; display:grid; place-items:center;
+  }
+  footer{padding-block:36px 0; color:var(--faint); font-size:14px}
+  footer p{margin:0 0 8px}
+
+  @media (max-width:520px){
+    .et{max-width:96px; font-size:11px}
+    .et b{font-size:13px}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Clase 2 · Reversing · Arsenal de la comunidad</p>
+  <h1>Que Se Abra Solo</h1>
+  <p class="lede">Un instalador de 86 MB que <strong>ningún antivirus detecta</strong>, con el código cifrado de verdad. No tenés la clave y no la vas a sacar. Da igual: <strong>el programa se descifra solo cada vez que arranca</strong>. Solo hay que estar esperándolo.</p>
+
+  <dl class="ficha">
+    <div><dt>Tamaño</dt><dd>86 MB</dd></div>
+    <div class="alerta"><dt>VirusTotal</dt><dd>0 / 47</dd></div>
+    <div><dt>Código</dt><dd>1 fichero JS</dd></div>
+    <div><dt>Ese fichero</dt><dd>4,2 MB</dd></div>
+  </dl>
+</header>
+
+<section>
+  <h2>01 · La medida que decide todo</h2>
+  <h3>¿Está cifrado, o solo codificado?</h3>
+  <p>La primera pregunta no es «¿cómo lo descifro?». Es esta. Y no se responde mirando: se <strong>mide</strong>.</p>
+  <p>La entropía cuenta cuánta sorpresa hay por byte. Si un fichero usa pocos símbolos y los repite, es baja. Si los 256 valores salen por igual, es máxima: 8 bits por byte.</p>
+
+  <div class="regla" role="img" aria-label="Regla de entropía de 0 a 8 bits por byte: el código fuente está en 4,5; el base64 en 6,0; el cifrado en 8,0.">
+    <div class="pista">
+      <span class="tick" style="left:0%"><i>0</i></span>
+      <span class="tick" style="left:25%"><i>2</i></span>
+      <span class="tick" style="left:50%"><i>4</i></span>
+      <span class="tick" style="left:75%"><i>6</i></span>
+      <span class="marca m-texto" style="left:56.25%"></span>
+      <span class="marca m-codif" style="left:75%"></span>
+      <span class="marca m-cifra" style="left:calc(100% - 2px)"></span>
+    </div>
+    <div class="etiquetas">
+      <span class="et e-texto" style="left:56.25%; transform:translateX(-50%)"><b>4,5</b><span>código fuente, texto</span></span>
+      <span class="et e-codif" style="left:75%; transform:translateX(-50%)"><b>6,0</b><span>base64</span></span>
+      <span class="et e-cifra derecha" style="right:0"><b>8,0</b><span>cifrado o comprimido</span></span>
+    </div>
+  </div>
+
+  <div class="cmd">
+<pre><code>import math, collections
+
+def entropia(b):
+    if not b: return 0.0
+    c = collections.Counter(b)
+    n = len(b)
+    return -sum((k/n) * math.log2(k/n) for k in c.values())</code></pre>
+  </div>
+
+  <p>El bloque de la muestra dio <strong>6,00</strong>. Eso es base64, no cifrado: el base64 solo usa 64 símbolos de los 256 posibles, y esa limitación se ve en el número. Lo descodifiqué y lo que salió debajo dio <strong>8,00</strong>.</p>
+
+  <div class="nota">
+    <p>Ese 8,00 cierra una puerta y abre otra.</p>
+    <p><strong>Cierra:</strong> no hay codificación que deshacer. Es cifrado de verdad y sin la clave no sale.</p>
+    <p><strong>Abre:</strong> si está cifrado, la clave <strong>tiene que estar ahí dentro</strong>, porque el programa se descifra a sí mismo cada vez que lo ejecutás.</p>
+  </div>
+</section>
+
+<section>
+  <h2>02 · La idea</h2>
+  <h3>Te lo está entregando</h3>
+  <p>Buscando en el fichero aparece la rutina que lo abre:</p>
+
+  <div class="cmd">
+<pre><code>const clave  = crypto.pbkdf2Sync(pass, salt, 100000, 32, 'sha512');
+const dec    = crypto.createDecipheriv('aes-256-cbc', clave, iv);
+const codigo = dec.update(BLOQUE, 'base64', 'utf8') + dec.final('utf8');
+
+new Function('exports','require','module','__filename','__dirname', codigo)(...);</code></pre>
+  </div>
+
+  <p>El camino obvio es sacar <code>pass</code>, <code>salt</code> e <code>iv</code> de la tabla de cadenas ofuscada. Lo intenté primero: monté un ataque de texto conocido probando 1.300 claves contra 31 entradas. <strong>Falló.</strong> Mi hipótesis sobre cómo estaba codificada la tabla era falsa, y punto.</p>
+
+  <p>Y entonces mirás la última línea otra vez. <code>new Function(..., codigo)</code>. El programa <strong>mete el texto en claro dentro de una función para ejecutarlo</strong>. Si yo cambio qué es <code>Function</code>, me lo entrega y no ejecuta nada.</p>
+
+  <div class="cmd">
+<pre><code>const Original = Function;
+
+function interceptor(...args) {
+  const cuerpo = args[args.length - 1];        // el ultimo argumento es el codigo
+  if (typeof cuerpo === 'string' &amp;&amp; cuerpo.length &gt; 500) {
+    require('fs').writeFileSync('/tmp/capturado.js', cuerpo);
+    console.log('&gt;&gt;&gt; CAPTURADO: ' + cuerpo.length + ' bytes');
+    process.exit(0);                            // y NO lo ejecuto
+  }
+  return Original.apply(this, args);
+}
+interceptor.prototype = Original.prototype;
+globalThis.Function = interceptor;</code></pre>
+  </div>
+
+  <div class="regla-oro">
+    <p class="tit">La idea, en general</p>
+    <p>Un programa protegido <strong>tiene que desprotegerse para funcionar</strong>. Buscá el punto donde está obligado a hacerlo y esperalo ahí. No rompés su protección: dejás que la termine.</p>
+  </div>
+</section>
+
+<section>
+  <h2>03 · Casi nunca hay una capa</h2>
+  <h3>Muñecas rusas</h3>
+  <p>Capturé 2.394.244 bytes. Los abrí esperando el programa. Lo que encontré empezaba así:</p>
+
+  <div class="cmd">
+<pre><code>const crypto = require('crypto');
+function decrypt(encdata, masterkey, salt, iv) {
+  const key = crypto.pbkdf2Sync(masterkey, salt, 100000, 32, 'sha512');
+  ...</code></pre>
+  </div>
+
+  <p>Otro desempaquetador. Y mi <code>process.exit(0)</code> al primer acierto me había parado justo ahí: por poco concluyo que el envoltorio era el programa.</p>
+
+  <div class="pila">
+    <div class="capa">
+      <span class="cab"><span class="rol">Lo que llega</span><span class="tam">4.263.196 B</span></span>
+      <p>Ofuscado, con un bloque de entropía 8,0 dentro.</p>
+    </div>
+    <div class="gancho">se abre con <code>Function</code> ↓</div>
+    <div class="capa">
+      <span class="cab"><span class="rol">Capa 1</span><span class="tam">2.394.244 B</span></span>
+      <p>No es el programa: es <strong>otro desempaquetador</strong>. Mismo PBKDF2, mismo AES.</p>
+    </div>
+    <div class="gancho">se abre con <code>Function</code> ↓</div>
+    <div class="capa final">
+      <span class="cab"><span class="rol">Capa 2</span><span class="tam">1.794.650 B</span></span>
+      <p>Ya no descifra nada. <strong>Esto es el programa.</strong> Y aquí se para, sin ejecutarlo.</p>
+    </div>
+  </div>
+
+  <p>La corrección es de una línea: en vez de parar al primer acierto, parás cuando el texto <em>deja</em> de ser un envoltorio.</p>
+
+  <div class="cmd">
+<pre><code>function esDesempaquetador(t) {
+  return t.includes('createDecipheriv') || t.includes('pbkdf2Sync');
+}
+
+if (!esDesempaquetador(cuerpo)) {
+  analizar(cuerpo);       // ya no descifra nada mas: es el programa final
+  process.exit(0);
+}
+// si SI lo es, se deja correr para que entregue la siguiente capa</code></pre>
+  </div>
+</section>
+
+<section>
+  <h2>04 · El gancho que no se puede esquivar</h2>
+  <p><code>Function</code> funciona, pero tiene una pega: solo lo pillás si el programa usa <code>Function</code>. Podría usar <code>eval</code>, o <code>vm.runInThisContext</code>, o ejecutar el resultado en línea sin pasar por ninguno.</p>
+  <p>Hay un sitio del que <strong>no puede escapar</strong>: para descifrarse, tiene que llamar al descifrador.</p>
+
+  <div class="cmd">
+<pre><code>const crypto   = require('crypto');
+const original = crypto.createDecipheriv;
+let n = 0;
+
+crypto.createDecipheriv = function (...a) {
+  const dec = original.apply(crypto, a);
+  const partes = [];
+  const u = dec.update.bind(dec), f = dec.final.bind(dec);
+
+  dec.update = function (...x) {
+    const r = u(...x);
+    partes.push(typeof r === 'string' ? r : r.toString('latin1'));
+    return r;
+  };
+  dec.final = function (...x) {
+    const r = f(...x);
+    partes.push(typeof r === 'string' ? r : r.toString('latin1'));
+    require('fs').writeFileSync('/tmp/claro' + (++n) + '.js', partes.join(''));
+    return r;
+  };
+  return dec;
+};</code></pre>
+  </div>
+
+  <p>Con esto cae <strong>cada</strong> descifrado, vaya después a donde vaya. Es el gancho que pondrías primero si volvieras a empezar.</p>
+</section>
+
+<section>
+  <h2>05 · Lo que falta es un espía</h2>
+  <p>La capa 2 dependía de módulos que no estaban: <code>fs-extra</code>, <code>axios</code>, <code>archiver</code>, <code>sqlite3</code>. Reventaba con <code>Cannot find module</code>.</p>
+  <p>Podías instalarlos. O podías darte cuenta de que <strong>un módulo que falta es una oportunidad</strong>: lo sustituís por algo que apunte todo lo que le pidan.</p>
+
+  <div class="cmd">
+<pre><code>const Module = require('module');
+
+function espia(nombre) {
+  const base = function () {};
+  const p = new Proxy(base, {
+    get(t, k) {
+      if (k === 'then' || k === 'toJSON') return undefined;   // que no parezca promesa
+      if (k === 'default') return p;
+      return espia(nombre + '.' + String(k));
+    },
+    apply(t, th, a) {
+      log('[LLAMADA] ' + nombre + '(' + a.map(resumir).join(', ') + ')');
+      return espia(nombre + '()');
+    },
+    construct(t, a) {
+      log('[NUEVO] new ' + nombre + '(' + a.map(resumir).join(', ') + ')');
+      return espia('new ' + nombre);
+    }
+  });
+  return p;
+}
+
+const cargaOriginal = Module._load;
+Module._load = function (peticion, padre, esMain) {
+  try { return cargaOriginal.apply(this, arguments); }
+  catch (e) { return espia(peticion); }          // no existe -> espia
+};</code></pre>
+  </div>
+
+  <p>Y cuando el programa llama a <code>axios.post(URL, datos)</code>, <strong>la URL queda escrita</strong>. No hizo falta descifrar nada: la descifró él solo para poder usarla.</p>
+
+  <div class="nota">
+    <p>El detalle del <code>then</code>: si un <code>Proxy</code> devuelve algo para la propiedad <code>then</code>, JavaScript lo trata como una promesa y un <code>await</code> se cuelga para siempre. Devolvé <code>undefined</code>.</p>
+  </div>
+</section>
+
+<section>
+  <h2>06 · Mentile sobre dónde está</h2>
+  <p>Nada de lo anterior sirve si el programa mira <code>process.platform</code>, ve <code>linux</code> y se va sin hacer nada. La muestra era para Windows.</p>
+
+  <div class="cmd">
+<pre><code>Object.defineProperty(process, 'platform', { value: 'win32' });
+process.env.APPDATA      = '/fakewin/Users/juan/AppData/Roaming';
+process.env.LOCALAPPDATA = '/fakewin/Users/juan/AppData/Local';
+process.env.USERPROFILE  = '/fakewin/Users/juan';
+process.env.TEMP         = '/fakewin/Temp';
+require('os').homedir = () =&gt; '/fakewin/Users/juan';</code></pre>
+  </div>
+
+  <p>Y los comandos se apuntan, no se ejecutan:</p>
+
+  <div class="cmd">
+<pre><code>const cp = require('child_process');
+for (const m of ['execSync','exec','execFileSync','spawnSync','spawn']) {
+  cp[m] = function (...a) {
+    log('[COMANDO ' + m + '] ' + String(a[0]).slice(0, 400));
+    return m.endsWith('Sync') ? '' : { on: () =&gt; {}, stdout: { on: () =&gt; {} } };
+  };
+}</code></pre>
+  </div>
+
+  <p>Con eso salieron <strong>36 comandos del sistema, escritos por el propio programa</strong>. Entre ellos, cómo cierra 19 navegadores distintos para desbloquear sus bases de datos de credenciales, y cómo enumera el antivirus antes de empezar.</p>
+</section>
+
+<section>
+  <h2>07 · El laboratorio</h2>
+  <h3>El orden no es un detalle: es lo único que lo hace seguro</h3>
+
+  <div class="cmd">
+<pre><code># 1. red ARRIBA, solo para instalar lo que haga falta
+rc-service networking start; udhcpc -i eth0 -n -q
+apk add nodejs
+
+# 2. red ABAJO, y se COMPRUEBA
+ip link set eth0 down
+ip addr show eth0 | grep -c 'inet '          # tiene que dar 0
+ping -c1 -W2 1.1.1.1 &amp;&amp; echo RED=SI || echo RED=NO
+
+# 3. AHORA se toca la muestra
+node arnes.js muestra.js</code></pre>
+  </div>
+
+  <p>La muestra nunca ve una interfaz levantada. Y se <strong>comprueba</strong>, no se supone.</p>
+
+  <h3>Nada de carpetas compartidas</h3>
+  <p>Las carpetas compartidas de VirtualBox necesitan Guest Additions, que es código corriendo dentro de la máquina con un canal directo al anfitrión. Justo lo que no querés. Un disco <code>ext2</code> de 24 MB no tiene canal de vuelta: se enchufa, se lee, se desenchufa.</p>
+
+  <div class="cmd">
+<pre><code>dd if=/dev/zero of=entrada.img bs=1M count=24
+mkfs.ext2 -L ENTRADA entrada.img
+# copiar dentro la muestra y el arnes, y despues:
+VBoxManage convertfromraw entrada.img entrada.vdi --format VDI</code></pre>
+  </div>
+
+  <h3>Y sin abrir una sola ventana</h3>
+  <div class="cmd">
+<pre><code>VBoxManage startvm lab --type headless
+VBoxManage controlvm lab keyboardputstring "ls -la"
+VBoxManage controlvm lab keyboardputscancode 1c 9c    # 1c = Intro, 9c = soltarlo
+VBoxManage controlvm lab screenshotpng pantalla.png</code></pre>
+  </div>
+  <p>Teclado y ojos. Nada aparece en tu escritorio.</p>
+</section>
+
+<section>
+  <h2>08 · Los dos errores</h2>
+  <p>Van aquí porque los vas a cometer vos también.</p>
+
+  <h3>El instrumento antes que el objetivo</h3>
+  <p>Dos veces seguidas el «no funciona» era mío. Primero estuve mandando órdenes por la consola serie <strong>a ciegas</strong>, dando por hecho que llegaban; una captura de pantalla mostró el <code>login:</code> intacto, sin una sola tecla recibida. Después <code>mount</code> fallaba con <em>Invalid argument</em> sobre un disco perfectamente válido —<code>blkid</code> decía <code>TYPE="ext2"</code>— porque el kernel <code>virt</code> de Alpine no trae ese driver cargado. <code>modprobe ext4</code> y entró.</p>
+
+  <div class="regla-oro">
+    <p class="tit">Regla</p>
+    <p>Cuando algo no funciona, sospechá de <strong>tu medición</strong> antes que del objetivo. Y conseguite una forma de <em>ver</em>, no de suponer.</p>
+  </div>
+
+  <h3>La carga útil anula <code>console.log</code></h3>
+  <p>Los ficheros se seguían escribiendo, pero la salida por pantalla se cortaba en seco a mitad y el proceso terminaba con código 0, como si todo hubiera ido bien. Si tu instrumentación habla por consola, te quedás ciego sin enterarte.</p>
+
+  <div class="cmd">
+<pre><code>// capturá la referencia ANTES de cargar la muestra, y escribí a fichero
+const fs = require('fs');
+function log(t) {
+  try { fs.appendFileSync('/mnt/ent/log.txt', t + '\n'); } catch (e) {}
+}</code></pre>
+  </div>
+</section>
+
+<section>
+  <h2>09 · El final</h2>
+  <h3>No afirmes negativos</h3>
+  <p>La pregunta que de verdad importaba a la víctima era <strong>¿deja algo instalado?</strong>, porque de eso dependía si tenía que formatear el equipo.</p>
+  <p>El primer barrido no encontró <code>schtasks</code> ni claves <code>Run</code>. <strong>Eso no es una respuesta</strong>, porque las cadenas seguían cifradas: «no encontré la palabra» no es «no está».</p>
+  <p>Para poder afirmarlo hicieron falta dos vías que no comparten supuestos:</p>
+  <ul>
+    <li><strong>Estática.</strong> Extraje del binario la maquinaria de cadenas —la tabla, los dos descifradores base y 817 funciones envoltorio—, la ejecuté en un fichero aparte y obtuve <strong>1.185 cadenas en claro</strong>. Ninguna contiene <code>schtasks</code>, <code>CurrentVersion\Run</code>, <code>RunOnce</code>, <code>Startup</code>, <code>sc create</code>, <code>.lnk</code> ni <code>.vbs</code>.</li>
+    <li><strong>Dinámica.</strong> De los 36 comandos ejecutados, las únicas operaciones de registro son <code>reg query</code>. Lectura.</li>
+  </ul>
+  <p>Con una sola vía no lo habría afirmado. Con las dos, sí. Y esa conclusión cambió el consejo: en vez de formatear, rotación dirigida de credenciales y cierre de sesión en todos los dispositivos.</p>
+
+  <div class="regla-oro">
+    <p class="tit">Lo que te llevás de la clase</p>
+    <p>Que no encuentres algo dice tanto de <strong>tu búsqueda</strong> como del objetivo. Antes de decir «no está», preguntate si tu búsqueda podía haberlo encontrado.</p>
+  </div>
+</section>
+
+<section>
+  <h2>10 · Resumen</h2>
+  <div class="tabla-cont">
+    <table>
+      <thead><tr><th>Problema</th><th>Lo que no funciona</th><th>Lo que sí</th></tr></thead>
+      <tbody>
+        <tr><td>Bloque con entropía 8,0</td><td>Atacar el cifrado sin la clave</td><td>Esperarlo en <code>createDecipheriv</code></td></tr>
+        <tr><td>Se ejecuta al descifrarse</td><td>Ejecutarlo y ver qué pasa</td><td>Sustituir <code>Function</code> y quedarse el texto</td></tr>
+        <tr><td>Hay varias capas</td><td>Parar en el primer acierto</td><td>Seguir mientras siga siendo envoltorio</td></tr>
+        <tr><td>Faltan dependencias</td><td>Instalar el árbol entero</td><td><code>Proxy</code> que apunta cada llamada</td></tr>
+        <tr><td>Es para Windows</td><td>Rendirse</td><td>Falsear <code>platform</code> y <code>%APPDATA%</code></td></tr>
+        <tr><td>¿Persiste?</td><td>Buscar una palabra y no hallarla</td><td>Dos vías independientes</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>11 · Ejercicios</h2>
+  <ol class="ejercicios">
+    <li>Escribí la función <code>entropia()</code> y pasásela a tres cosas: un <code>.py</code> tuyo, ese mismo fichero en base64, y un <code>.zip</code>. Anotá los tres números y explicá por qué el del zip se parece al de un cifrado.</li>
+    <li>Hacé un <code>prueba.js</code> que meta un <code>console.log('hola')</code> dentro de un <code>new Function(...)</code> y ejecutalo. Después escribí el gancho de la sección 02 y comprobá que capturás el texto <strong>sin que se imprima nada</strong>.</li>
+    <li>Escribí el <code>espia()</code> de la sección 05 y cargá con él un módulo que no exista. Llamalo con <code>modulo.algo.otraCosa(1, 'dos')</code> y mirá qué registra.</li>
+    <li>¿Por qué el <code>Proxy</code> tiene que devolver <code>undefined</code> para <code>then</code>? Probá a devolver el espía y hacé <code>await</code> sobre él. Cortalo con Ctrl+C.</li>
+    <li>Montá la VM de la sección 07 y comprobá el paso 2: que <code>ping</code> falla <strong>antes</strong> de tocar nada. Si no comprobás eso, no tenés un laboratorio: tenés una esperanza.</li>
+  </ol>
+</section>
+
+<footer>
+  <p>Segunda clase de la serie. La primera fue <strong>El Umbral</strong>: encontrar el fallo cuando sí tenés el código fuente.</p>
+  <p>El caso es real y está anonimizado. El dominio y los endpoints no se publican: están reportados y difundirlos antes de que las plataformas actúen solo avisa al operador.</p>
+</footer>
+
+</div>
+
+<script>
+  document.querySelectorAll('.cmd').forEach(function (bloque) {
+    var pre = bloque.querySelector('pre');
+    if (!pre) return;
+    var boton = document.createElement('button');
+    boton.className = 'copiar';
+    boton.type = 'button';
+    boton.textContent = 'copiar';
+    boton.addEventListener('click', function () {
+      var texto = pre.innerText;
+      function ok() { boton.textContent = 'copiado'; setTimeout(function () { boton.textContent = 'copiar'; }, 1400); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texto).then(ok, seleccionar);
+      } else {
+        seleccionar();
+      }
+      function seleccionar() {
+        var r = document.createRange();
+        r.selectNodeContents(pre);
+        var s = window.getSelection();
+        s.removeAllRanges();
+        s.addRange(r);
+        boton.textContent = 'seleccionado';
+        setTimeout(function () { boton.textContent = 'copiar'; }, 1800);
+      }
+    });
+    bloque.appendChild(boton);
+  });
+</script>
