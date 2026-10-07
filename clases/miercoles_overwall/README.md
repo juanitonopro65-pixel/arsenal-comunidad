@@ -82,6 +82,27 @@ hay delante.
 Fingir un fallo sería lo peor que podríamos hacer, porque entonces lo que
 aprenden es falso.
 
+**Y Juan añadió una regla el 7-oct, que va más allá de "no subir":** si lo están
+haciendo bien, el defensor **baja** de nivel. Es decir, retira una defensa que ya
+había puesto, no solo deja de añadir.
+
+La diferencia importa y no es cosmética:
+
+| | qué pasa |
+|---|---|
+| **no subir** | se quedan peleando contra lo que ya hay. Si estaban atascados, siguen atascados |
+| **bajar** | se les devuelve un camino que ya habían ganado antes y se les cerró |
+
+La condición es la misma de siempre, y es estricta: **bajar solo cuando han
+demostrado que entienden**, no cuando llevan rato sin avanzar. Si bajamos por
+lástima, lo que aprenden es que insistir basta — que es justo lo contrario de la
+clase. El criterio es el de la casa: **si funcionó y no saben por qué, no lo
+resolvieron**, y entonces no se baja nada.
+
+Y se dice en voz alta cuando pasa: *"os quito el bloqueo por IP"*. Un cambio
+silencioso en la defensa convierte su medición en basura sin que lo sepan, que es
+exactamente el error que esta clase enseña a no cometer.
+
 ---
 
 ## 3. El guion de la clase
